@@ -1,4 +1,11 @@
-# Name of your application. Used to uniquely configure containers.
+# Production deployment configuration.
+# For staging, overrides live in config/deploy.staging.yml.
+#
+# Deploy to production:  kamal deploy
+# Deploy to staging:     kamal deploy -d staging
+# First-time setup:      kamal setup          (production)
+#                        kamal setup -d staging
+
 service: barberapp
 
 # Docker Hub image — replace YOUR_DOCKERHUB_USERNAME with your actual username.

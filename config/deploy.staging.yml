@@ -1,0 +1,28 @@
+# Staging environment overrides.
+# Deep-merged with config/deploy.yml by Kamal when you pass -d staging.
+#
+# Usage:
+#   kamal setup   -d staging   # first-time server bootstrap for staging
+#   kamal deploy  -d staging   # deploy to staging
+#   kamal rollback -d staging  # roll back staging
+#
+# Secrets are read from .kamal/secrets.staging instead of .kamal/secrets.
+
+servers:
+  web:
+    hosts:
+      - STAGING_SERVER_IP   # ← replace with your staging Hetzner VPS IPv4
+
+env:
+  clear:
+    APP_HOST: staging.barberapp.com   # ← replace with your staging domain
+    RAILS_LOG_LEVEL: debug            # verbose logging in staging
+    RAILS_ENV: production             # still runs in production mode
+
+accessories:
+  db:
+    host: STAGING_SERVER_IP           # ← same staging server IP
+    env:
+      clear:
+        POSTGRES_USER: barberapp
+        POSTGRES_DB: barberapp_staging
