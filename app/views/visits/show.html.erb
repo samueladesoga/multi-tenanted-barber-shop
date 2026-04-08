@@ -1,0 +1,59 @@
+<% content_for :title, "Visit — #{@visit.customer.name}" %>
+
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Visit</h1>
+      <p class="text-gray-500 text-sm mt-1">
+        <%= @visit.customer.name %> &bull; <%= @visit.visited_at.strftime("%d %b %Y") %>
+      </p>
+    </div>
+    <%= link_to "Back to Visits", visits_path, class: "text-gray-500 hover:text-gray-700 text-sm" %>
+  </div>
+
+  <div class="bg-white shadow rounded-xl p-6 space-y-4">
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <p class="text-xs text-gray-400 uppercase font-medium">Customer</p>
+        <%= link_to @visit.customer.name, customer_path(@visit.customer),
+            class: "text-amber-600 hover:text-amber-800 font-medium" %>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase font-medium">Service</p>
+        <p class="font-medium text-gray-800"><%= @visit.service.name %></p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase font-medium">Price Charged</p>
+        <p class="font-semibold text-gray-800">
+          <%= format_currency(@visit.price_charged) %>
+          <% if @visit.is_free %>
+            <span class="text-xs font-medium text-green-600 ml-1">FREE</span>
+          <% end %>
+        </p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase font-medium">Base Price</p>
+        <p class="text-gray-600"><%= format_currency(@visit.service.base_price) %></p>
+      </div>
+      <% if @visit.discounted? %>
+        <div class="col-span-2">
+          <p class="text-xs text-gray-400 uppercase font-medium">Discount</p>
+          <p class="text-gray-600">
+            <%= format_currency(@visit.discount_amount) %> off
+            <% if @visit.discount_reason.present? %>
+              &mdash; <%= @visit.discount_reason %>
+            <% end %>
+          </p>
+        </div>
+      <% end %>
+      <div>
+        <p class="text-xs text-gray-400 uppercase font-medium">Logged By</p>
+        <p class="text-gray-600"><%= @visit.staff.name %></p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase font-medium">Date</p>
+        <p class="text-gray-600"><%= @visit.visited_at.strftime("%d %b %Y at %H:%M") %></p>
+      </div>
+    </div>
+  </div>
+</div>

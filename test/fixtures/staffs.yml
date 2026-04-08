@@ -1,0 +1,13 @@
+owner:
+  name: Alice Owner
+  email: alice@demo.com
+  encrypted_password: <%= Devise::Encryptor.digest(Staff, "password") %>
+  role: 1
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+barber:
+  name: Bob Barber
+  email: bob@demo.com
+  encrypted_password: <%= Devise::Encryptor.digest(Staff, "password") %>
+  role: 0
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>

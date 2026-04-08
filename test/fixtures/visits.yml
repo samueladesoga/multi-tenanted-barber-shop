@@ -1,0 +1,27 @@
+regular_haircut:
+  customer_id:   <%= ActiveRecord::FixtureSet.identify(:regular) %>
+  service_id:    <%= ActiveRecord::FixtureSet.identify(:haircut) %>
+  staff_id:      <%= ActiveRecord::FixtureSet.identify(:barber) %>
+  salon_id:      <%= ActiveRecord::FixtureSet.identify(:demo) %>
+  price_charged: 20.00
+  is_free:       false
+  visited_at:    <%= Date.today.change(day: [Date.today.day, 2].min) %>
+
+discounted_haircut:
+  customer_id:    <%= ActiveRecord::FixtureSet.identify(:veteran) %>
+  service_id:     <%= ActiveRecord::FixtureSet.identify(:haircut) %>
+  staff_id:       <%= ActiveRecord::FixtureSet.identify(:owner) %>
+  salon_id:       <%= ActiveRecord::FixtureSet.identify(:demo) %>
+  price_charged:  15.00
+  discount_reason: "Loyal customer discount"
+  is_free:        false
+  visited_at:     <%= 3.days.ago %>
+
+free_visit:
+  customer_id:   <%= ActiveRecord::FixtureSet.identify(:veteran) %>
+  service_id:    <%= ActiveRecord::FixtureSet.identify(:haircut) %>
+  staff_id:      <%= ActiveRecord::FixtureSet.identify(:barber) %>
+  salon_id:      <%= ActiveRecord::FixtureSet.identify(:demo) %>
+  price_charged: 0.00
+  is_free:       true
+  visited_at:    <%= 2.weeks.ago %>

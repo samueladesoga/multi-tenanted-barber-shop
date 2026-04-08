@@ -1,0 +1,8 @@
+Hi <%= @customer.name %>,
+
+Your appointment at <%= @salon.name %> has been received:
+  Date/Time: <%= @appointment.scheduled_at.strftime("%A, %d %B %Y at %H:%M") %>
+<% if @appointment.service %>  Service: <%= @appointment.service.name %>
+<% end %>
+We'll confirm it shortly. See you soon!
+— <%= @salon.name %>

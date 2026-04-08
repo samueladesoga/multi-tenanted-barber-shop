@@ -1,0 +1,43 @@
+<%= form_with model: expense, local: true, class: "bg-white shadow rounded-lg p-8 space-y-5 max-w-lg" do |f| %>
+  <% if expense.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">
+      <ul class="list-disc list-inside space-y-1">
+        <% expense.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :amount, "Amount", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :amount, step: "0.01", min: 0,
+          class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400",
+          placeholder: "0.00" %>
+    </div>
+    <div>
+      <%= f.label :incurred_on, "Date", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.date_field :incurred_on,
+          class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :category, "Category", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.select :category,
+        Expense.categories.keys.map { |k| [k.humanize, k] },
+        {},
+        class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+  </div>
+
+  <div>
+    <%= f.label :description, "Description (optional)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_field :description, placeholder: "e.g. Monthly rent payment",
+        class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+    <%= f.submit expense.new_record? ? "Log Expense" : "Save Changes",
+        class: "bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors cursor-pointer" %>
+    <%= link_to "Cancel", expenses_path, class: "text-gray-500 hover:text-gray-700 py-2 px-4" %>
+  </div>
+<% end %>

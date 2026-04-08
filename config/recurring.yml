@@ -1,0 +1,11 @@
+production:
+  appointment_reminders:
+    class: AppointmentReminderJob
+    schedule: "0 9 * * *"   # Every day at 9:00am — sends reminders for tomorrow's appointments
+    queue: default
+
+development:
+  appointment_reminders:
+    class: AppointmentReminderJob
+    schedule: "0 9 * * *"
+    queue: default

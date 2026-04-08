@@ -1,0 +1,118 @@
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">Reports</h1>
+
+  <%= render "report_nav",
+      selected_month: @selected_month,
+      prev_month: @prev_month,
+      next_month: @next_month,
+      is_future: @is_future %>
+
+  <%= render "report_nav",
+      selected_month: @selected_month,
+      prev_month: @prev_month,
+      next_month: @next_month,
+      is_future: @is_future %>
+
+  <% if @service_stats.any? %>
+    <!-- Summary cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white shadow rounded-lg p-5 text-center">
+        <p class="text-sm text-gray-500">Total Revenue</p>
+        <p class="text-2xl font-bold text-green-600"><%= format_currency(@total_revenue) %></p>
+      </div>
+      <div class="bg-white shadow rounded-lg p-5 text-center">
+        <p class="text-sm text-gray-500">Services Performed</p>
+        <p class="text-2xl font-bold text-gray-800"><%= @service_stats.size %></p>
+      </div>
+      <div class="bg-white shadow rounded-lg p-5 text-center">
+        <p class="text-sm text-gray-500">Total Discounts Given</p>
+        <p class="text-2xl font-bold text-amber-600"><%= format_currency(@total_discounts) %></p>
+      </div>
+    </div>
+
+    <!-- Side-by-side charts -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Revenue by Service</h2>
+        <%= bar_chart @revenue_by_service_chart, colors: ["#f59e0b"], library: { indexAxis: "y" } %>
+      </div>
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Visit Count by Service</h2>
+        <%= bar_chart @visits_by_service_chart, colors: ["#3b82f6"], library: { indexAxis: "y" } %>
+      </div>
+    </div>
+
+    <!-- Detailed table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-800">Service Breakdown</h2>
+        <p class="text-sm text-gray-400 mt-0.5">Sorted by total revenue</p>
+      </div>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Visits</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Base Price</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Avg Charged</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Revenue</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Discounts</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Revenue Share</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @service_stats.each do |s| %>
+            <% avg_below_base = s[:avg_charged] < s[:base_price] %>
+            <tr>
+              <td class="px-6 py-4 text-sm font-medium text-gray-900"><%= s[:name] %></td>
+              <td class="px-6 py-4 text-sm text-gray-600 text-right"><%= s[:visit_count] %></td>
+              <td class="px-6 py-4 text-sm text-gray-600 text-right"><%= format_currency(s[:base_price]) %></td>
+              <td class="px-6 py-4 text-sm text-right font-medium <%= avg_below_base ? 'text-amber-600' : 'text-gray-700' %>">
+                <%= format_currency(s[:avg_charged]) %>
+                <% if avg_below_base %>
+                  <span class="block text-xs text-gray-400">
+                    &minus;<%= format_currency(s[:base_price] - s[:avg_charged]) %> avg discount
+                  </span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 text-sm font-semibold text-green-700 text-right">
+                <%= format_currency(s[:total_revenue]) %>
+              </td>
+              <td class="px-6 py-4 text-sm text-right <%= s[:total_discount] > 0 ? 'text-amber-600' : 'text-gray-300' %>">
+                <%= s[:total_discount] > 0 ? format_currency(s[:total_discount]) : "—" %>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 bg-gray-100 rounded-full h-2">
+                    <div class="bg-amber-400 h-2 rounded-full" style="width: <%= s[:revenue_share] %>%"></div>
+                  </div>
+                  <span class="text-xs text-gray-500 w-10 text-right"><%= s[:revenue_share] %>%</span>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot class="bg-gray-50">
+          <tr>
+            <td class="px-6 py-3 text-sm font-semibold text-gray-700">Total</td>
+            <td class="px-6 py-3 text-sm font-semibold text-gray-700 text-right">
+              <%= @service_stats.sum { |s| s[:visit_count] } %>
+            </td>
+            <td colspan="2"></td>
+            <td class="px-6 py-3 text-sm font-bold text-green-700 text-right">
+              <%= format_currency(@total_revenue) %>
+            </td>
+            <td class="px-6 py-3 text-sm font-semibold text-amber-600 text-right">
+              <%= format_currency(@total_discounts) %>
+            </td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  <% else %>
+    <div class="bg-white shadow rounded-lg px-6 py-16 text-center text-gray-400">
+      No visits recorded for <%= @selected_month.strftime("%B %Y") %>.
+    </div>
+  <% end %>
+</div>

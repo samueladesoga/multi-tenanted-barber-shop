@@ -1,0 +1,32 @@
+<div class="space-y-4 mb-8">
+  <!-- Month navigation -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <%= link_to "&laquo;".html_safe, url_for(month: prev_month.strftime("%Y-%m")),
+          class: "text-gray-400 hover:text-gray-700 px-2 py-1 text-lg" %>
+      <span class="text-xl font-bold text-gray-800"><%= selected_month.strftime("%B %Y") %></span>
+      <% unless is_future %>
+        <%= link_to "&raquo;".html_safe, url_for(month: next_month.strftime("%Y-%m")),
+            class: "text-gray-400 hover:text-gray-700 px-2 py-1 text-lg" %>
+      <% end %>
+    </div>
+    <%= form_with url: request.path, method: :get, local: true, class: "flex items-center gap-2" do |f| %>
+      <%= f.month_field :month, value: selected_month.strftime("%Y-%m"),
+          class: "border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400",
+          onchange: "this.form.submit()" %>
+    <% end %>
+  </div>
+
+  <!-- Tab navigation -->
+  <div class="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+    <% [
+      ["P&L",      reports_path(month: selected_month.strftime("%Y-%m"))],
+      ["Services", service_reports_path(month: selected_month.strftime("%Y-%m"))],
+      ["Discounts", discount_reports_path(month: selected_month.strftime("%Y-%m"))]
+    ].each do |label, path| %>
+      <% active = request.path == path.split("?").first %>
+      <%= link_to label, path,
+          class: "px-4 py-2 rounded-md text-sm font-medium transition-colors #{active ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}" %>
+    <% end %>
+  </div>
+</div>

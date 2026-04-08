@@ -1,0 +1,55 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-900">Customers</h1>
+    <%= link_to "Register Customer", new_customer_path,
+        class: "bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors" %>
+  </div>
+
+  <%= form_with url: customers_path, method: :get, local: true, class: "flex gap-2" do |f| %>
+    <%= f.text_field :q, value: params[:q], placeholder: "Search by name or phone...",
+        class: "flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" %>
+    <%= f.submit "Search", class: "bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg cursor-pointer" %>
+  <% end %>
+
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <% if @customers.any? %>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Visits</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Next Free In</th>
+            <th class="px-6 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @customers.each do |customer| %>
+            <tr>
+              <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                <%= link_to customer.name, customer_path(customer), class: "hover:text-amber-600" %>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600"><%= customer.phone_number %></td>
+              <td class="px-6 py-4 text-sm text-gray-600"><%= customer.visits_count %></td>
+              <td class="px-6 py-4 text-sm">
+                <% if customer.visits_until_free == 1 %>
+                  <span class="text-amber-600 font-semibold">Next visit FREE!</span>
+                <% else %>
+                  <span class="text-gray-500"><%= customer.visits_until_free %> visits</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 text-sm text-right space-x-2">
+                <%= link_to "QR", qr_code_customer_path(customer), class: "text-gray-400 hover:text-amber-600" %>
+                <%= link_to "Check in", new_visit_path(customer_id: customer.id), class: "text-amber-600 hover:text-amber-800 font-medium" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="px-6 py-12 text-center text-gray-400">
+        No customers yet. <%= link_to "Register one", new_customer_path, class: "text-amber-500 underline" %>.
+      </p>
+    <% end %>
+  </div>
+</div>

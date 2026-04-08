@@ -1,0 +1,47 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-900">Team</h1>
+    <%= link_to "Add Staff Member", new_staff_path,
+        class: "bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors" %>
+  </div>
+
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+          <th class="px-6 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @staffs.each do |staff| %>
+          <tr>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+              <%= staff.name %>
+              <% if staff == Current.staff %>
+                <span class="ml-2 text-xs text-gray-400">(you)</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600"><%= staff.email %></td>
+            <td class="px-6 py-4">
+              <span class="text-xs font-medium px-2 py-1 rounded
+                <%= staff.owner? ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600' %>">
+                <%= staff.role.humanize %>
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-right space-x-3">
+              <%= link_to "Edit", edit_staff_path(staff), class: "text-amber-600 hover:text-amber-800" %>
+              <% unless staff == Current.staff %>
+                <%= link_to "Remove", staff_path(staff),
+                    data: { turbo_method: :delete, turbo_confirm: "Remove #{staff.name} from the team?" },
+                    class: "text-red-400 hover:text-red-600" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

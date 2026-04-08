@@ -1,0 +1,20 @@
+haircut:
+  name: Haircut
+  base_price: 20.00
+  duration_minutes: 30
+  active: true
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+beard_trim:
+  name: Beard Trim
+  base_price: 10.00
+  duration_minutes: 20
+  active: true
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+inactive_service:
+  name: Hot Towel Shave
+  base_price: 25.00
+  duration_minutes: 45
+  active: false
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>

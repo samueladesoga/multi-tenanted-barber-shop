@@ -1,0 +1,25 @@
+regular:
+  name: Regular Customer
+  phone_number: "07700900001"
+  email: regular@example.com
+  qr_token: regular-qr-token-abc123
+  visits_count: 0
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+# One visit away from earning a free cut (threshold is 5)
+near_milestone:
+  name: Near Milestone
+  phone_number: "07700900002"
+  email: near@example.com
+  qr_token: near-qr-token-abc123
+  visits_count: 4
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+# Has already hit the milestone once
+veteran:
+  name: Veteran Customer
+  phone_number: "07700900003"
+  email: veteran@example.com
+  qr_token: veteran-qr-token-abc123
+  visits_count: 10
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>

@@ -1,0 +1,46 @@
+<%= form_with model: staff, local: true, class: "bg-white shadow rounded-lg p-8 space-y-5 max-w-lg" do |f| %>
+  <% if staff.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">
+      <ul class="list-disc list-inside space-y-1">
+        <% staff.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :name, "Full Name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_field :name, class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+  </div>
+
+  <div>
+    <%= f.label :email, "Email Address", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.email_field :email, class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+  </div>
+
+  <div>
+    <%= f.label :role, "Role", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.select :role, Staff.roles.keys.map { |r| [ r.humanize, r ] }, {},
+        class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+  </div>
+
+  <div>
+    <%= f.label :password, staff.new_record? ? "Password" : "New Password (leave blank to keep current)",
+        class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.password_field :password,
+        class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400",
+        autocomplete: "new-password" %>
+  </div>
+
+  <div>
+    <%= f.label :password_confirmation, "Confirm Password", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.password_field :password_confirmation,
+        class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400",
+        autocomplete: "new-password" %>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+    <%= f.submit staff.new_record? ? "Add Staff Member" : "Save Changes",
+        class: "bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors cursor-pointer" %>
+    <%= link_to "Cancel", staffs_path, class: "text-gray-500 hover:text-gray-700 py-2 px-4" %>
+  </div>
+<% end %>

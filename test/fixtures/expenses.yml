@@ -1,0 +1,15 @@
+monthly_rent:
+  amount: 1500.00
+  category: 0
+  description: Monthly rent payment
+  incurred_on: <%= Date.today.beginning_of_month %>
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+  staff_id: <%= ActiveRecord::FixtureSet.identify(:owner) %>
+
+supplies_order:
+  amount: 85.00
+  category: 1
+  description: Clippers and scissors
+  incurred_on: <%= Date.today.beginning_of_month + 5.days %>
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+  staff_id: <%= ActiveRecord::FixtureSet.identify(:barber) %>

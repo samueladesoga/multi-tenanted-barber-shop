@@ -1,0 +1,76 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-900">Appointments</h1>
+    <%= link_to "Book Appointment", new_appointment_path,
+        class: "bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors" %>
+  </div>
+
+  <% if @pending_count > 0 %>
+    <div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-amber-800 text-sm font-medium">
+      <%= @pending_count %> pending appointment<%= @pending_count == 1 ? "" : "s" %> waiting for confirmation.
+    </div>
+  <% end %>
+
+  <!-- Date navigation -->
+  <div class="flex items-center gap-4">
+    <%= link_to "&laquo;".html_safe, appointments_path(date: (@date - 1.day).to_s),
+        class: "text-gray-400 hover:text-gray-700 px-2 py-1" %>
+    <h2 class="text-lg font-semibold text-gray-700">
+      <%= @date == Date.today ? "Today — " : "" %><%= @date.strftime("%A, %d %B %Y") %>
+    </h2>
+    <%= link_to "&raquo;".html_safe, appointments_path(date: (@date + 1.day).to_s),
+        class: "text-gray-400 hover:text-gray-700 px-2 py-1" %>
+    <%= link_to "Today", appointments_path, class: "text-sm text-amber-500 hover:underline ml-2" unless @date == Date.today %>
+  </div>
+
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <% if @appointments.any? %>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Staff</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th class="px-6 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @appointments.each do |appt| %>
+            <tr>
+              <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                <%= appt.scheduled_at.strftime("%H:%M") %>
+                <span class="text-gray-400 text-xs">(<%= appt.duration_minutes %>min)</span>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-800">
+                <%= link_to appt.customer.name, customer_path(appt.customer), class: "hover:text-amber-600" %>
+                <div class="text-xs text-gray-400"><%= appt.customer.phone_number %></div>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600"><%= appt.service&.name || "—" %></td>
+              <td class="px-6 py-4 text-sm text-gray-500"><%= appt.staff&.name || "Any" %></td>
+              <td class="px-6 py-4"><%= render "status_badge", appt: appt %></td>
+              <td class="px-6 py-4 text-sm text-right space-x-2">
+                <% if appt.pending? %>
+                  <%= link_to "Confirm", appointment_confirmation_path(appt), data: { turbo_method: :post },
+                      class: "text-green-600 hover:text-green-800 font-medium" %>
+                <% end %>
+                <% if appt.confirmed? %>
+                  <%= link_to "Complete", appointment_completion_path(appt), data: { turbo_method: :post },
+                      class: "text-blue-600 hover:text-blue-800 font-medium" %>
+                <% end %>
+                <% unless appt.cancelled? || appt.completed? %>
+                  <%= link_to "Cancel", appointment_cancellation_path(appt),
+                      data: { turbo_method: :post, turbo_confirm: "Cancel this appointment?" },
+                      class: "text-red-400 hover:text-red-600" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="px-6 py-12 text-center text-gray-400">No appointments scheduled for this day.</p>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,7 @@
+demo:
+  name: Demo Salon
+  subdomain: demo
+  owner_name: Alice Owner
+  owner_email: alice@demo.com
+  loyalty_threshold: 5
+  chair_count: 2

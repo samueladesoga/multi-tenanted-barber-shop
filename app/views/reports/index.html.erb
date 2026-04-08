@@ -1,0 +1,95 @@
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">Reports</h1>
+
+  <%= render "report_nav",
+      selected_month: @selected_month,
+      prev_month: @prev_month,
+      next_month: @next_month,
+      is_future: @is_future %>
+
+  <!-- P&L summary cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white shadow rounded-lg p-6 text-center">
+      <p class="text-sm font-medium text-gray-500 mb-1">Total Revenue</p>
+      <p class="text-3xl font-bold text-green-600"><%= format_currency(@revenue) %></p>
+      <p class="text-xs text-gray-400 mt-1">
+        <%= @visit_count %> visits<% if @free_visit_count > 0 %> (<%= @free_visit_count %> free)<% end %>
+      </p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6 text-center">
+      <p class="text-sm font-medium text-gray-500 mb-1">Total Expenses</p>
+      <p class="text-3xl font-bold text-red-500"><%= format_currency(@total_expenses) %></p>
+      <p class="text-xs text-gray-400 mt-1">Across all categories</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6 text-center border-2
+        <%= @profitable ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50' %>">
+      <p class="text-sm font-medium text-gray-500 mb-1"><%= @profitable ? "Net Profit" : "Net Loss" %></p>
+      <p class="text-3xl font-bold <%= @profitable ? 'text-green-700' : 'text-red-700' %>">
+        <%= format_currency(@profit_loss.abs) %>
+      </p>
+      <p class="text-xs text-gray-400 mt-1">Revenue &minus; Expenses</p>
+    </div>
+  </div>
+
+  <!-- Daily revenue vs expenses chart -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Daily Revenue vs Expenses</h2>
+    <%= line_chart(
+      [
+        { name: "Revenue",  data: @daily_revenue },
+        { name: "Expenses", data: @daily_expenses }
+      ],
+      colors:  ["#f59e0b", "#ef4444"],
+      library: { scales: { y: { beginAtZero: true } } }
+    ) %>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Revenue by service -->
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Revenue by Service</h2>
+      <% if @revenue_by_service.any? %>
+        <%= bar_chart @revenue_by_service.to_h, colors: ["#f59e0b"] %>
+        <table class="min-w-full mt-4 text-sm divide-y divide-gray-100">
+          <% @revenue_by_service.each do |service, amount| %>
+            <tr class="flex justify-between py-2">
+              <td class="text-gray-700"><%= service %></td>
+              <td class="font-semibold text-gray-900"><%= format_currency(amount) %></td>
+            </tr>
+          <% end %>
+        </table>
+      <% else %>
+        <p class="text-gray-400 text-sm">No visits recorded this month.</p>
+      <% end %>
+    </div>
+
+    <!-- Expenses by category -->
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Expenses by Category</h2>
+      <% if @expenses_by_category.any? %>
+        <% labelled = @expenses_by_category.transform_keys(&:humanize) %>
+        <%= pie_chart labelled, colors: %w[#f59e0b #ef4444 #3b82f6 #10b981 #8b5cf6 #f97316 #6b7280] %>
+        <table class="min-w-full mt-4 text-sm divide-y divide-gray-100">
+          <% labelled.sort_by { |_, v| -v }.each do |cat, amount| %>
+            <tr class="flex justify-between py-2">
+              <td class="text-gray-700"><%= cat %></td>
+              <td class="font-semibold text-red-600"><%= format_currency(amount) %></td>
+            </tr>
+          <% end %>
+        </table>
+      <% else %>
+        <p class="text-gray-400 text-sm">No expenses logged this month.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <% if @discount_total > 0 %>
+    <div class="bg-amber-50 border border-amber-200 rounded-lg px-5 py-4 text-sm text-amber-800">
+      <strong>Discounts given this month: <%= format_currency(@discount_total) %></strong>
+      — see the
+      <%= link_to "Discounts tab", discount_reports_path(month: @selected_month.strftime("%Y-%m")),
+          class: "underline hover:text-amber-600" %>
+      for a full breakdown.
+    </div>
+  <% end %>
+</div>

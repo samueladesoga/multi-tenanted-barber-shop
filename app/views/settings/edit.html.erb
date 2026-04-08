@@ -1,0 +1,55 @@
+<% content_for :title, "Settings | #{current_salon.name}" %>
+
+<div class="max-w-2xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Salon Settings</h1>
+    <p class="text-gray-500 text-sm mt-1">Manage your salon's configuration.</p>
+  </div>
+
+  <div class="bg-white shadow rounded-xl p-6">
+    <%= form_with model: @salon, url: settings_path, method: :patch do |f| %>
+      <% if @salon.errors.any? %>
+        <div class="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
+          <ul class="list-disc list-inside space-y-1">
+            <% @salon.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="space-y-5">
+        <div>
+          <%= f.label :name, "Salon Name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.text_field :name, class: "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" %>
+        </div>
+
+        <div>
+          <%= f.label :loyalty_threshold, "Loyalty Threshold", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <p class="text-xs text-gray-400 mb-1">Number of paid visits before a customer earns a free cut.</p>
+          <%= f.number_field :loyalty_threshold, min: 1, class: "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" %>
+        </div>
+
+        <div>
+          <%= f.label :chair_count, "Number of Chairs", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <p class="text-xs text-gray-400 mb-1">Used to calculate concurrent appointment capacity.</p>
+          <%= f.number_field :chair_count, min: 1, class: "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" %>
+        </div>
+
+        <div>
+          <%= f.label :currency, "Currency", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <p class="text-xs text-gray-400 mb-1">Used for all price displays across the app.</p>
+          <%= f.select :currency,
+              Salon::SUPPORTED_CURRENCIES.map { |code, opts| ["#{opts[:unit]}  #{code}", code] },
+              {},
+              class: "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" %>
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center gap-3">
+        <%= f.submit "Save Settings", class: "bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-5 rounded-lg text-sm cursor-pointer transition-colors" %>
+        <%= link_to "Cancel", dashboard_path, class: "text-gray-500 hover:text-gray-700 text-sm" %>
+      </div>
+    <% end %>
+  </div>
+</div>

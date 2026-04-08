@@ -1,0 +1,69 @@
+<% content_for :title, "Appointment — #{@appointment.customer.name}" %>
+
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Appointment</h1>
+      <p class="text-gray-500 text-sm mt-1">
+        <%= @appointment.customer.name %> &bull;
+        <%= @appointment.scheduled_at.strftime("%A, %d %b %Y at %H:%M") %>
+      </p>
+    </div>
+    <%= link_to "Back to Appointments", appointments_path, class: "text-gray-500 hover:text-gray-700 text-sm" %>
+  </div>
+
+  <div class="bg-white shadow rounded-xl p-6 space-y-5">
+    <%= render "status_badge", appt: @appointment %>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <p class="text-xs text-gray-400 uppercase font-medium">Customer</p>
+        <%= link_to @appointment.customer.name, customer_path(@appointment.customer),
+            class: "text-amber-600 hover:text-amber-800 font-medium" %>
+      </div>
+      <% if @appointment.service %>
+        <div>
+          <p class="text-xs text-gray-400 uppercase font-medium">Service</p>
+          <p class="font-medium text-gray-800">
+            <%= @appointment.service.name %>
+            <span class="text-gray-400 text-sm">(<%= @appointment.duration_minutes %> min)</span>
+          </p>
+        </div>
+      <% end %>
+      <% if @appointment.staff %>
+        <div>
+          <p class="text-xs text-gray-400 uppercase font-medium">Staff</p>
+          <p class="text-gray-600"><%= @appointment.staff.name %></p>
+        </div>
+      <% end %>
+      <div>
+        <p class="text-xs text-gray-400 uppercase font-medium">Booked By</p>
+        <p class="text-gray-600"><%= @appointment.staff_member? ? "Staff" : "Customer" %></p>
+      </div>
+      <% if @appointment.notes.present? %>
+        <div class="col-span-2">
+          <p class="text-xs text-gray-400 uppercase font-medium">Notes</p>
+          <p class="text-gray-600"><%= @appointment.notes %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="flex gap-3 pt-2 border-t border-gray-100">
+      <% if @appointment.pending? %>
+        <%= button_to "Confirm", appointment_confirmation_path(@appointment),
+            class: "bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded-lg" %>
+      <% end %>
+      <% if @appointment.convertible_to_visit? %>
+        <%= button_to "Mark Complete", appointment_completion_path(@appointment),
+            class: "bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium py-2 px-4 rounded-lg" %>
+      <% end %>
+      <% unless @appointment.cancelled? || @appointment.completed? %>
+        <%= button_to "Cancel", appointment_cancellation_path(@appointment),
+            class: "bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium py-2 px-4 rounded-lg",
+            data: { turbo_confirm: "Cancel this appointment?" } %>
+      <% end %>
+      <%= link_to "Edit", edit_appointment_path(@appointment),
+          class: "text-gray-500 hover:text-gray-700 text-sm py-2 px-4" %>
+    </div>
+  </div>
+</div>

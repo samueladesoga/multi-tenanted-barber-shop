@@ -1,0 +1,13 @@
+<p>Hi <%= @customer.name %>,</p>
+<p>Your appointment at <strong><%= @salon.name %></strong> has been received and is pending confirmation.</p>
+<table style="border-spacing: 8px">
+  <tr><td><strong>Date &amp; Time:</strong></td><td><%= @appointment.scheduled_at.strftime("%A, %d %B %Y at %H:%M") %></td></tr>
+  <% if @appointment.service %>
+    <tr><td><strong>Service:</strong></td><td><%= @appointment.service.name %></td></tr>
+  <% end %>
+  <% if @appointment.staff %>
+    <tr><td><strong>Barber:</strong></td><td><%= @appointment.staff.name %></td></tr>
+  <% end %>
+</table>
+<p>We'll send another email once your appointment is confirmed. See you soon!</p>
+<p>— The team at <%= @salon.name %></p>

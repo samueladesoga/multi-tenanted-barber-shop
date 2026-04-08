@@ -1,0 +1,4 @@
+<p>Hi <%= @customer.name %>,</p>
+<p>Your appointment at <strong><%= @salon.name %></strong> on <%= @appointment.scheduled_at.strftime("%A, %d %B at %H:%M") %> has been cancelled.</p>
+<p>Please contact us or visit our booking page to rebook at a convenient time.</p>
+<p>— The team at <%= @salon.name %></p>

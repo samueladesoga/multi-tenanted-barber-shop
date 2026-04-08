@@ -1,0 +1,61 @@
+<div>
+  <%= f.label :service_id, "Service", class: "block text-sm font-medium text-gray-700 mb-1" %>
+  <select name="booking[service_id]" id="booking_service_select"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400"
+          onchange="loadBookingSlots()">
+    <option value="">Select a service...</option>
+    <% services.each do |s| %>
+      <option value="<%= s.id %>" data-duration="<%= s.duration_minutes %>">
+        <%= s.name %> — <%= format_currency(s.base_price) %>
+      </option>
+    <% end %>
+  </select>
+</div>
+
+<div>
+  <label for="booking_date" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+  <input type="date" id="booking_date"
+         min="<%= Date.tomorrow %>"
+         value="<%= Date.tomorrow %>"
+         class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400"
+         onchange="loadBookingSlots()">
+</div>
+
+<div>
+  <label class="block text-sm font-medium text-gray-700 mb-1">Time Slot</label>
+  <select name="booking[scheduled_at]" id="booking_slot_select"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400">
+    <option value="">Select a service and date first</option>
+  </select>
+</div>
+
+<div>
+  <label for="booking_notes" class="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+  <textarea name="booking[notes]" id="booking_notes" rows="2"
+            placeholder="Any special requests?"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400"></textarea>
+</div>
+
+<button type="submit"
+        class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+  Confirm Booking
+</button>
+
+<script>
+const bookingSlotsUrl = "<%= booking_slots_path %>";
+
+function loadBookingSlots() {
+  const date      = document.getElementById('booking_date').value;
+  const serviceId = document.getElementById('booking_service_select').value;
+  if (!date || !serviceId) return;
+
+  fetch(`${bookingSlotsUrl}?date=${date}&service_id=${serviceId}`)
+    .then(r => r.json())
+    .then(slots => {
+      const sel = document.getElementById('booking_slot_select');
+      sel.innerHTML = slots.length
+        ? '<option value="">Pick a time...</option>' + slots.map(s => `<option value="${s.value}">${s.label}</option>`).join('')
+        : '<option value="" disabled>No slots available for this date</option>';
+    });
+}
+</script>

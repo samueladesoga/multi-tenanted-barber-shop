@@ -1,0 +1,142 @@
+<%= form_with model: appointment, local: true, class: "bg-white shadow rounded-lg p-8 space-y-5 max-w-xl" do |f| %>
+  <% if appointment.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">
+      <ul class="list-disc list-inside space-y-1">
+        <% appointment.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Customer lookup -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+    <% if appointment.customer.present? %>
+      <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+        <span class="font-medium text-gray-900"><%= appointment.customer.name %> — <%= appointment.customer.phone_number %></span>
+        <%= f.hidden_field :customer_id %>
+      </div>
+    <% else %>
+      <div class="flex gap-2 mb-2">
+        <input type="text" id="customer_search" placeholder="Search by name or phone..."
+               class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 text-sm">
+        <button type="button" onclick="searchCustomer()"
+                class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm">Find</button>
+      </div>
+      <div id="customer_results" class="border border-gray-200 rounded-lg divide-y divide-gray-100 hidden"></div>
+      <%= f.hidden_field :customer_id, id: "customer_id_field" %>
+      <p id="selected_customer" class="text-sm text-green-700 font-medium mt-1 hidden"></p>
+    <% end %>
+  </div>
+
+  <!-- Service -->
+  <div>
+    <%= f.label :service_id, "Service (optional)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.select :service_id,
+        services.map { |s| ["#{s.name} — #{format_currency(s.base_price)} (#{s.duration_minutes}min)", s.id] },
+        { include_blank: "Any / TBD" },
+        class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400",
+        id: "service_select",
+        onchange: "loadSlots()" %>
+  </div>
+
+  <!-- Date picker -->
+  <div>
+    <label for="date_picker" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+    <input type="date" id="date_picker"
+           value="<%= appointment.scheduled_at&.to_date || Date.today %>"
+           min="<%= Date.today %>"
+           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400"
+           onchange="loadSlots()">
+  </div>
+
+  <!-- Time slot picker -->
+  <div>
+    <%= f.label :scheduled_at, "Time Slot", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <select name="appointment[scheduled_at]" id="slot_select"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400">
+      <% if slots.any? %>
+        <% slots.each do |slot| %>
+          <option value="<%= slot.iso8601 %>" <%= "selected" if appointment.scheduled_at == slot %>>
+            <%= slot.strftime("%H:%M") %>
+          </option>
+        <% end %>
+      <% else %>
+        <option value="" disabled>No slots available — select a date</option>
+      <% end %>
+    </select>
+    <p class="text-xs text-gray-400 mt-1">Only available slots are shown</p>
+  </div>
+
+  <!-- Assigned staff -->
+  <div>
+    <%= f.label :staff_id, "Assigned Barber (optional)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.select :staff_id,
+        staffs.map { |s| [s.name, s.id] },
+        { include_blank: "Any available" },
+        class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+  </div>
+
+  <!-- Notes -->
+  <div>
+    <%= f.label :notes, "Notes (optional)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_area :notes, rows: 2, placeholder: "Special requests, allergies, etc.",
+        class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+    <%= f.submit appointment.new_record? ? "Book Appointment" : "Update Appointment",
+        class: "bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors cursor-pointer" %>
+    <%= link_to "Cancel", appointments_path, class: "text-gray-500 hover:text-gray-700 py-2 px-4" %>
+  </div>
+<% end %>
+
+<script>
+const slotsUrl   = "<%= slots_appointments_path %>";
+const searchUrl  = "<%= customers_path(format: :json) %>";
+const excludeId  = "<%= appointment.id %>";
+
+function loadSlots() {
+  const date      = document.getElementById('date_picker').value;
+  const serviceId = document.getElementById('service_select').value;
+  if (!date) return;
+
+  fetch(`${slotsUrl}?date=${date}&service_id=${serviceId}&exclude_id=${excludeId}`)
+    .then(r => r.json())
+    .then(slots => {
+      const sel = document.getElementById('slot_select');
+      sel.innerHTML = slots.length
+        ? slots.map(s => `<option value="${s.value}">${s.label}</option>`).join('')
+        : '<option value="" disabled>No slots available for this date</option>';
+    });
+}
+
+function searchCustomer() {
+  const q = document.getElementById('customer_search').value;
+  if (!q) return;
+
+  fetch(`${searchUrl}?q=${encodeURIComponent(q)}`, { headers: { 'Accept': 'application/json' } })
+    .then(r => r.json())
+    .then(customers => {
+      const div = document.getElementById('customer_results');
+      if (!customers.length) {
+        div.innerHTML = '<p class="px-4 py-3 text-sm text-gray-400">No customers found.</p>';
+      } else {
+        div.innerHTML = customers.map(c =>
+          `<button type="button" onclick="selectCustomer(${c.id}, '${c.name}', '${c.phone_number}')"
+                   class="w-full text-left px-4 py-3 hover:bg-amber-50 text-sm">
+             <span class="font-medium">${c.name}</span>
+             <span class="text-gray-400 ml-2">${c.phone_number}</span>
+           </button>`
+        ).join('');
+      }
+      div.classList.remove('hidden');
+    });
+}
+
+function selectCustomer(id, name, phone) {
+  document.getElementById('customer_id_field').value = id;
+  document.getElementById('selected_customer').textContent = `Selected: ${name} (${phone})`;
+  document.getElementById('selected_customer').classList.remove('hidden');
+  document.getElementById('customer_results').classList.add('hidden');
+}
+</script>

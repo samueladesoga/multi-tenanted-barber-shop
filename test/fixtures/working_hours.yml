@@ -1,0 +1,51 @@
+# All 7 days open 09:00–18:00 (default; staff can customise)
+# day_of_week: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6
+
+monday:
+  day_of_week: 0
+  opens_at: "09:00"
+  closes_at: "18:00"
+  is_closed: false
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+tuesday:
+  day_of_week: 1
+  opens_at: "09:00"
+  closes_at: "18:00"
+  is_closed: false
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+wednesday:
+  day_of_week: 2
+  opens_at: "09:00"
+  closes_at: "18:00"
+  is_closed: false
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+thursday:
+  day_of_week: 3
+  opens_at: "09:00"
+  closes_at: "18:00"
+  is_closed: false
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+friday:
+  day_of_week: 4
+  opens_at: "09:00"
+  closes_at: "18:00"
+  is_closed: false
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+saturday:
+  day_of_week: 5
+  opens_at: "09:00"
+  closes_at: "18:00"
+  is_closed: false
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>
+
+sunday:
+  day_of_week: 6
+  opens_at: "09:00"
+  closes_at: "18:00"
+  is_closed: false
+  salon_id: <%= ActiveRecord::FixtureSet.identify(:demo) %>

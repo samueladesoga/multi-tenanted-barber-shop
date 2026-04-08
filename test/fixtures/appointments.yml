@@ -1,0 +1,17 @@
+pending_morning:
+  customer_id: <%= ActiveRecord::FixtureSet.identify(:regular) %>
+  service_id:  <%= ActiveRecord::FixtureSet.identify(:haircut) %>
+  staff_id:    <%= ActiveRecord::FixtureSet.identify(:barber) %>
+  salon_id:    <%= ActiveRecord::FixtureSet.identify(:demo) %>
+  scheduled_at: <%= 3.days.from_now.change(hour: 10, min: 0) %>
+  status: 0
+  booked_by: 1
+
+confirmed_afternoon:
+  customer_id: <%= ActiveRecord::FixtureSet.identify(:near_milestone) %>
+  service_id:  <%= ActiveRecord::FixtureSet.identify(:beard_trim) %>
+  staff_id:    <%= ActiveRecord::FixtureSet.identify(:barber) %>
+  salon_id:    <%= ActiveRecord::FixtureSet.identify(:demo) %>
+  scheduled_at: <%= 4.days.from_now.change(hour: 14, min: 0) %>
+  status: 1
+  booked_by: 0

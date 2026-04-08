@@ -1,0 +1,79 @@
+# Name of your application. Used to uniquely configure containers.
+service: barberapp
+
+# Docker Hub image — replace YOUR_DOCKERHUB_USERNAME with your actual username.
+image: YOUR_DOCKERHUB_USERNAME/barberapp
+
+# Deploy to your Hetzner VPS. Replace with your server's public IP.
+servers:
+  web:
+    hosts:
+      - YOUR_SERVER_IP
+    # Publish the app on localhost:3000 only — Nginx fronts it with wildcard SSL.
+    # After first deploy run: kamal proxy stop (Nginx handles the proxy role).
+    options:
+      publish:
+        - "127.0.0.1:3000:80"
+
+# Docker Hub registry — set KAMAL_REGISTRY_PASSWORD in .kamal/secrets.
+registry:
+  server: registry-1.docker.io
+  username: YOUR_DOCKERHUB_USERNAME
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Environment variables injected into the container.
+env:
+  secret:
+    - RAILS_MASTER_KEY
+    - DATABASE_URL
+    - TWILIO_ACCOUNT_SID
+    - TWILIO_AUTH_TOKEN
+    - TWILIO_FROM
+    - SMTP_ADDRESS
+    - SMTP_USERNAME
+    - SMTP_PASSWORD
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+    RAILS_LOG_LEVEL: info
+    APP_HOST: barberapp.com
+
+# SSH into the server as a non-root deploy user (created by server_setup.sh).
+ssh:
+  user: deploy
+
+# Persistent volume for Active Storage uploads.
+volumes:
+  - "barberapp_storage:/rails/storage"
+
+# Bridge fingerprinted assets across deploys to avoid 404s mid-deploy.
+asset_path: /rails/public/assets
+
+# Build for amd64 (Hetzner VPS architecture).
+# If you're on Apple Silicon (M1/M2/M3), cross-compile here.
+builder:
+  arch: amd64
+
+# PostgreSQL running as a Kamal accessory on the same server.
+# The container is reachable inside Docker as "barberapp-db".
+accessories:
+  db:
+    image: postgres:16
+    host: YOUR_SERVER_IP
+    port: "127.0.0.1:5432:5432"
+    env:
+      secret:
+        - POSTGRES_PASSWORD
+      clear:
+        POSTGRES_USER: barberapp
+        POSTGRES_DB: barberapp_production
+    directories:
+      - data:/var/lib/postgresql/data
+
+# Handy aliases: bin/kamal <alias>
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+  migrate: app exec "bin/rails db:migrate"

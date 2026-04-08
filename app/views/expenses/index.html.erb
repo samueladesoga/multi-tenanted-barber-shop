@@ -1,0 +1,79 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-900">Expenses</h1>
+    <%= link_to "Log Expense", new_expense_path,
+        class: "bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors" %>
+  </div>
+
+  <!-- Month filter -->
+  <div class="flex items-center gap-3">
+    <%= form_with url: expenses_path, method: :get, local: true, class: "flex items-center gap-2" do |f| %>
+      <%= f.month_field :month, value: @selected_month.strftime("%Y-%m"),
+          class: "border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 text-sm" %>
+      <%= f.submit "Filter", class: "bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg text-sm cursor-pointer" %>
+    <% end %>
+    <span class="text-gray-400 text-sm">Showing <%= @selected_month.strftime("%B %Y") %></span>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white shadow rounded-lg p-4 col-span-2 md:col-span-1">
+      <p class="text-sm text-gray-500">Total Expenses</p>
+      <p class="text-2xl font-bold text-red-600"><%= format_currency(@total) %></p>
+    </div>
+    <% @by_category.sort_by { |_, v| -v }.first(3).each do |cat, amount| %>
+      <div class="bg-white shadow rounded-lg p-4">
+        <p class="text-sm text-gray-500"><%= cat.to_s.humanize %></p>
+        <p class="text-xl font-bold text-gray-800"><%= format_currency(amount) %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Expense list -->
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <% if @expenses.any? %>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Logged by</th>
+            <th class="px-6 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @expenses.each do |expense| %>
+            <tr>
+              <td class="px-6 py-4 text-sm text-gray-600"><%= expense.incurred_on.strftime("%d %b %Y") %></td>
+              <td class="px-6 py-4 text-sm">
+                <span class="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
+                  <%= expense.category_label %>
+                </span>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600"><%= expense.description.presence || "—" %></td>
+              <td class="px-6 py-4 text-sm font-semibold text-red-600"><%= format_currency(expense.amount) %></td>
+              <td class="px-6 py-4 text-sm text-gray-400"><%= expense.staff.name %></td>
+              <td class="px-6 py-4 text-sm text-right space-x-3">
+                <%= link_to "Edit", edit_expense_path(expense), class: "text-amber-600 hover:text-amber-800" %>
+                <%= link_to "Delete", expense_path(expense),
+                    data: { turbo_method: :delete, turbo_confirm: "Delete this expense?" },
+                    class: "text-red-400 hover:text-red-600" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot class="bg-gray-50">
+          <tr>
+            <td colspan="3" class="px-6 py-3 text-sm font-semibold text-gray-700 text-right">Total</td>
+            <td class="px-6 py-3 text-sm font-bold text-red-600"><%= format_currency(@total) %></td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    <% else %>
+      <p class="px-6 py-12 text-center text-gray-400">No expenses logged for this month.</p>
+    <% end %>
+  </div>
+</div>

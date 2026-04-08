@@ -1,0 +1,114 @@
+<div class="max-w-xl space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">Check In Customer</h1>
+
+  <% unless @customer %>
+    <!-- Customer lookup -->
+    <div class="bg-white shadow rounded-lg p-6 space-y-4">
+      <h2 class="font-semibold text-gray-700">Find Customer</h2>
+
+      <div class="flex gap-2">
+        <%= form_with url: new_visit_path, method: :get, local: true, class: "flex-1 flex gap-2" do |f| %>
+          <%= f.telephone_field :phone, placeholder: "Search by phone number",
+              class: "flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+          <%= f.submit "Find", class: "bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg cursor-pointer text-sm" %>
+        <% end %>
+      </div>
+
+      <div class="flex gap-2">
+        <%= form_with url: new_visit_path, method: :get, local: true, class: "flex-1 flex gap-2" do |f| %>
+          <%= f.text_field :name, placeholder: "Search by name",
+              class: "flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+          <%= f.submit "Find", class: "bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg cursor-pointer text-sm" %>
+        <% end %>
+      </div>
+
+      <% if @customers.present? %>
+        <div class="border border-gray-200 rounded-lg divide-y divide-gray-100">
+          <% @customers.each do |c| %>
+            <%= link_to new_visit_path(customer_id: c.id),
+                class: "flex items-center justify-between px-4 py-3 hover:bg-amber-50 transition-colors" do %>
+              <div>
+                <span class="font-medium text-gray-900"><%= c.name %></span>
+                <span class="text-gray-400 text-sm ml-2"><%= c.phone_number %></span>
+              </div>
+              <span class="text-amber-500 text-sm">Select &rarr;</span>
+            <% end %>
+          <% end %>
+        </div>
+      <% elsif params[:name].present? || params[:phone].present? %>
+        <p class="text-sm text-gray-400">No customers found.
+          <%= link_to "Register a new customer", new_customer_path, class: "text-amber-500 underline" %>.
+        </p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @customer %>
+    <!-- Customer card -->
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center justify-between">
+      <div>
+        <p class="font-semibold text-gray-900"><%= @customer.name %></p>
+        <p class="text-sm text-gray-500"><%= @customer.phone_number %> &bull; <%= @customer.visits_count %> visits</p>
+      </div>
+      <% if @customer.visits_until_free == 1 %>
+        <span class="bg-amber-400 text-white text-xs font-bold px-3 py-1 rounded-full">NEXT VISIT FREE</span>
+      <% end %>
+    </div>
+
+    <!-- Visit form -->
+    <%= form_with model: @visit, url: visits_path, local: true, class: "bg-white shadow rounded-lg p-6 space-y-5" do |f| %>
+      <%= f.hidden_field :customer_id, value: @customer.id %>
+
+      <% if @visit.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+          <ul class="list-disc list-inside space-y-1">
+            <% @visit.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div>
+        <%= f.label :service_id, "Service", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.select :service_id,
+            @services.map { |s| ["#{s.name} — #{format_currency(s.base_price)}", s.id, { data: { price: s.base_price } }] },
+            { include_blank: "Select a service..." },
+            class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400",
+            id: "service_select" %>
+      </div>
+
+      <div>
+        <%= f.label :price_charged, "Price Charged", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <div class="relative">
+          <span class="absolute left-3 top-2 text-gray-400 text-sm"></span>
+          <%= f.number_field :price_charged, step: "0.01", min: 0,
+              class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400",
+              id: "price_field", placeholder: "0.00" %>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Override to apply a discount</p>
+      </div>
+
+      <div>
+        <%= f.label :discount_reason, "Discount Reason (optional)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :discount_reason, placeholder: "e.g. loyal customer, birthday",
+            class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" %>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <%= f.submit "Log Visit", class: "bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors cursor-pointer" %>
+        <%= link_to "Cancel", dashboard_path, class: "text-gray-500 hover:text-gray-700 py-2 px-4" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
+
+<script>
+  document.getElementById('service_select')?.addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    const price = selected.dataset.price;
+    if (price) {
+      document.getElementById('price_field').value = parseFloat(price).toFixed(2);
+    }
+  });
+</script>

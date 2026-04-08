@@ -1,0 +1,10 @@
+<% colors = {
+  "pending"   => "bg-yellow-100 text-yellow-800",
+  "confirmed" => "bg-green-100 text-green-800",
+  "completed" => "bg-blue-100 text-blue-800",
+  "cancelled" => "bg-gray-100 text-gray-500",
+  "no_show"   => "bg-red-100 text-red-700"
+} %>
+<span class="text-xs font-medium px-2 py-1 rounded <%= colors[appt.status] %>">
+  <%= appt.status.humanize %>
+</span>
