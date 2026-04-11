@@ -6,21 +6,14 @@ class RegistrationsController < ApplicationController
 
   def create
     @salon = Salon.new(salon_params)
-
-    # Build owner staff record alongside the salon
-    @staff = @salon.staffs.build(
-      name:                  @salon.owner_name,
-      email:                 @salon.owner_email,
-      password:              staff_params[:password],
-      password_confirmation: staff_params[:password_confirmation],
-      role:                  :owner
-    )
+    @staff = @salon.build_owner(**staff_params.to_h.symbolize_keys)
 
     if @salon.save
       ActsAsTenant.with_tenant(@salon) { @salon.seed_working_hours! }
       sign_in(@staff)
-      redirect_to "http://#{@salon.subdomain}.#{request.domain}/working_hours",
-                  notice: "Welcome! Set your working hours to complete setup."
+      redirect_to request.base_url.sub("://", "://#{@salon.subdomain}.") + "/working_hours",
+                  notice: "Welcome! Set your working hours to complete setup.",
+                  allow_other_host: true
     else
       render :new, status: :unprocessable_entity
     end

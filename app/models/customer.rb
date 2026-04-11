@@ -41,8 +41,8 @@ class Customer < ApplicationRecord
 
   # -- QR code -----------------------------------------------------------------
 
-  def qr_code_svg
-    qr = RQRCode::QRCode.new(qr_token)
+  def qr_code_svg(content = qr_token)
+    qr = RQRCode::QRCode.new(content)
     qr.as_svg(offset: 0, color: "000", shape_rendering: "crispEdges", module_size: 4, standalone: true)
   end
 

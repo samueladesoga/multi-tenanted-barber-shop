@@ -16,7 +16,7 @@ class ApplicationController < ActionController::Base
         ActsAsTenant.current_tenant = salon
         Current.salon = salon
       else
-        redirect_to marketing_root_url(subdomain: false), alert: "Salon not found."
+        redirect_to marketing_root_url(subdomain: false), alert: "Salon not found.", allow_other_host: true
       end
     end
 
@@ -33,11 +33,8 @@ class ApplicationController < ActionController::Base
     end
 
     def authenticate_staff!
-      unless staff_signed_in?
-        redirect_to new_staff_session_path, alert: "Please sign in to continue."
-      else
-        Current.staff = warden.authenticate(scope: :staff)
-      end
+      return redirect_to new_staff_session_path, alert: "Please sign in to continue." unless staff_signed_in?
+      Current.staff = warden.authenticate(scope: :staff)
     end
 
     def after_sign_in_path_for(_resource)

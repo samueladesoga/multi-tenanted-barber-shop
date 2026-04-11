@@ -29,7 +29,7 @@
   <div class="print-card bg-white shadow rounded-xl p-6 inline-block">
     <p class="font-bold text-lg text-gray-900 mb-1"><%= @customer.name %></p>
     <p class="text-xs text-gray-400 mb-4"><%= current_salon.name %></p>
-    <%= @customer.qr_code_svg.html_safe %>
+    <%= @customer.qr_code_svg(scan_qr_url(@customer.qr_token)).html_safe %>
     <p class="text-xs text-gray-400 font-mono mt-3 break-all"><%= @customer.qr_token %></p>
     <p class="text-xs text-gray-500 mt-2">Show this at every visit to earn your free cut.</p>
   </div>
@@ -49,7 +49,9 @@
   <% end %>
 
   <!-- Actions (screen only) -->
-  <div class="no-print flex justify-center gap-3">
+  <div class="no-print flex justify-center gap-3 flex-wrap">
+    <%= link_to "Check In Now", new_visit_path(customer_id: @customer.id),
+        class: "bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-5 rounded-lg text-sm transition-colors" %>
     <button data-action="print#now"
             class="bg-gray-800 hover:bg-gray-700 text-white py-2 px-5 rounded-lg text-sm transition-colors">
       Print QR Code

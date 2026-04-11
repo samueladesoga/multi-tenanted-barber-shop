@@ -32,6 +32,16 @@ class Salon < ApplicationRecord
     working_hours.find_by(day_of_week: day)
   end
 
+  def build_owner(password:, password_confirmation:)
+    staffs.build(
+      name:                  owner_name,
+      email:                 owner_email,
+      password:              password,
+      password_confirmation: password_confirmation,
+      role:                  :owner
+    )
+  end
+
   # Seeds default working hours after salon registration (all 7 days open).
   def seed_working_hours!
     WorkingHour::DAYS.each_with_index do |_day, index|

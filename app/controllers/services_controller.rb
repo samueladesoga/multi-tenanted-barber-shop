@@ -1,6 +1,6 @@
 class ServicesController < ApplicationController
   before_action :authenticate_staff!
-  before_action :set_service, only: %i[show edit update destroy]
+  before_action :set_service, only: %i[ edit update destroy ]
 
   def index
     @services = Service.order(:name)
@@ -42,12 +42,11 @@ class ServicesController < ApplicationController
   end
 
   private
+    def set_service
+      @service = Service.find(params[:id])
+    end
 
-  def set_service
-    @service = Service.find(params[:id])
-  end
-
-  def service_params
-    params.require(:service).permit(:name, :base_price, :duration_minutes, :active)
-  end
+    def service_params
+      params.require(:service).permit(:name, :base_price, :duration_minutes, :active)
+    end
 end

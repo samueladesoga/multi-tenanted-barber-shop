@@ -1,6 +1,6 @@
 class ExpensesController < ApplicationController
   before_action :authenticate_staff!
-  before_action :set_expense, only: %i[show edit update destroy]
+  before_action :set_expense, only: %i[ edit update destroy ]
 
   def index
     @expenses = Expense.includes(:staff).order(incurred_on: :desc)
@@ -11,11 +11,11 @@ class ExpensesController < ApplicationController
       @selected_month = Date.new(year, month)
     else
       @expenses = @expenses.this_month
-      @selected_month = Date.today
+      @selected_month = Date.current
     end
 
     @total = @expenses.sum(:amount)
-    @by_category = @expenses.group(:category).sum(:amount)
+    @by_category = @expenses.unscope(:order).group(:category).sum(:amount)
   end
 
   def new
