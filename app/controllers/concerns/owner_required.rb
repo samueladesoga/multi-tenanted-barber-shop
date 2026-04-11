@@ -7,9 +7,9 @@ module OwnerRequired
 
   private
     def require_owner!
-      if Current.staff.nil?
+      if current_staff.nil?
         redirect_to new_staff_session_path, alert: "Please sign in to continue."
-      elsif !Current.staff.owner?
+      elsif !current_staff.owner?
         redirect_to dashboard_path, alert: "Only the salon owner can access this."
       end
     end

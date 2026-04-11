@@ -5,6 +5,8 @@ class Customer < ApplicationRecord
 
   acts_as_tenant :salon
 
+  attribute :visits_count, :integer, default: 0
+
   before_create :generate_qr_token
 
   validates :name, presence: true

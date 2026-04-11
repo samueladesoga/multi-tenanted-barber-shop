@@ -52,17 +52,17 @@
               <td class="px-6 py-4"><%= render "status_badge", appt: appt %></td>
               <td class="px-6 py-4 text-sm text-right space-x-2">
                 <% if appt.pending? %>
-                  <%= link_to "Confirm", appointment_confirmation_path(appt), data: { turbo_method: :post },
-                      class: "text-green-600 hover:text-green-800 font-medium" %>
+                  <%= button_to "Confirm", appointment_confirmation_path(appt), method: :post,
+                      class: "text-green-600 hover:text-green-800 font-medium bg-transparent border-0 cursor-pointer p-0" %>
                 <% end %>
                 <% if appt.confirmed? %>
-                  <%= link_to "Complete", appointment_completion_path(appt), data: { turbo_method: :post },
-                      class: "text-blue-600 hover:text-blue-800 font-medium" %>
+                  <%= button_to "Complete", appointment_completion_path(appt), method: :post,
+                      class: "text-blue-600 hover:text-blue-800 font-medium bg-transparent border-0 cursor-pointer p-0" %>
                 <% end %>
                 <% unless appt.cancelled? || appt.completed? %>
-                  <%= link_to "Cancel", appointment_cancellation_path(appt),
-                      data: { turbo_method: :post, turbo_confirm: "Cancel this appointment?" },
-                      class: "text-red-400 hover:text-red-600" %>
+                  <%= button_to "Cancel", appointment_cancellation_path(appt), method: :post,
+                      form: { data: { turbo_confirm: "Cancel this appointment?" } },
+                      class: "text-red-400 hover:text-red-600 bg-transparent border-0 cursor-pointer p-0" %>
                 <% end %>
               </td>
             </tr>

@@ -10,7 +10,8 @@ Rails.application.routes.draw do
   constraints subdomain: /\A[a-z0-9\-]+\z/ do
     devise_for :staffs, controllers: { sessions: "staffs/sessions" }
 
-    root "dashboard#index", as: :dashboard
+    root "salon_home#index"
+    get "dashboard", to: "dashboard#index", as: :dashboard
 
     # QR scan — public, no auth required
     get "scan/:qr_token", to: "visits#scan", as: :scan_qr
@@ -37,7 +38,9 @@ Rails.application.routes.draw do
     post "book", to: "bookings#create", as: :bookings
     get  "book/slots", to: "bookings#slots", as: :booking_slots
 
-    resources :working_hours, only: %i[index edit update]
+    resources :working_hours, only: %i[index edit update] do
+      collection { patch :update }
+    end
     resources :expenses
     get "reports",          to: "reports#index",    as: :reports
     get "reports/services", to: "reports#services", as: :service_reports
