@@ -1,28 +1,36 @@
-# Staging environment overrides.
+# Staging environment overrides — runs on the SAME VPS as production.
 # Deep-merged with config/deploy.yml by Kamal when you pass -d staging.
 #
 # Usage:
-#   kamal setup   -d staging   # first-time server bootstrap for staging
-#   kamal deploy  -d staging   # deploy to staging
-#   kamal rollback -d staging  # roll back staging
+#   kamal setup    -d staging   # first-time bootstrap
+#   kamal deploy   -d staging   # deploy to staging
+#   kamal rollback -d staging   # roll back staging
 #
 # Secrets are read from .kamal/secrets.staging instead of .kamal/secrets.
 
 servers:
   web:
     hosts:
-      - STAGING_SERVER_IP   # ← replace with your staging Hetzner VPS IPv4
+      - YOUR_SERVER_IP   # ← same Hetzner VPS as production
+    # Staging app binds to port 3001 to avoid conflicting with production (3000)
+    options:
+      publish:
+        - "127.0.0.1:3001:80"
 
 env:
   clear:
-    APP_HOST: staging.barberapp.com   # ← replace with your staging domain
-    RAILS_LOG_LEVEL: debug            # verbose logging in staging
-    RAILS_ENV: production             # still runs in production mode
+    APP_HOST: staging.barberapp.com
+    RAILS_LOG_LEVEL: debug
+    RAILS_ENV: production
 
 accessories:
   db:
-    host: STAGING_SERVER_IP           # ← same staging server IP
+    # Same server, different host port (5433) to avoid conflicting with production (5432)
+    host: YOUR_SERVER_IP
+    port: "127.0.0.1:5433:5432"
     env:
+      secret:
+        - STAGING_POSTGRES_PASSWORD
       clear:
         POSTGRES_USER: barberapp
         POSTGRES_DB: barberapp_staging

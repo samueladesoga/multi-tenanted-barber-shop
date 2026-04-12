@@ -25,14 +25,14 @@ A multi-tenant SaaS application for managing barber salons. Each salon gets its 
 - [Hetzner VPS Deployment](#hetzner-vps-deployment)
   - [Environment Strategy](#environment-strategy)
   - [Infrastructure Overview](#infrastructure-overview)
-  - [1. Provision Two Servers](#1-provision-two-servers)
+  - [1. Provision a Server](#1-provision-a-server)
   - [2. Configure DNS](#2-configure-dns)
   - [3. Run the Server Setup Script](#3-run-the-server-setup-script)
   - [4. Configure deploy.yml Files](#4-configure-deployyml-files)
   - [5. Configure Secrets](#5-configure-secrets)
   - [6. First Deploy — Staging](#6-first-deploy--staging)
   - [7. First Deploy — Production](#7-first-deploy--production)
-  - [8. Stop kamal-proxy on Both Servers](#8-stop-kamal-proxy-on-both-servers)
+  - [8. Stop kamal-proxy](#8-stop-kamal-proxy)
   - [9. Subsequent Deploys](#9-subsequent-deploys)
   - [10. Useful Kamal Commands](#10-useful-kamal-commands)
 - [11. Backups](#11-backups)
@@ -373,7 +373,7 @@ The `letter_opener` gem is configured for development. All emails open in your d
 
 ### Environment Strategy
 
-The app uses two separate Hetzner VPS instances — one for staging and one for production. Kamal 2's **destination** feature handles the split cleanly:
+Both staging and production run on the **same single Hetzner VPS**. Kamal 2's **destination** feature handles the split cleanly, with port separation preventing conflicts:
 
 | | Staging | Production |
 |---|---|---|
@@ -381,109 +381,115 @@ The app uses two separate Hetzner VPS instances — one for staging and one for 
 | Config file | `config/deploy.yml` + `config/deploy.staging.yml` | `config/deploy.yml` |
 | Secrets file | `.kamal/secrets.staging` | `.kamal/secrets` |
 | Domain | `*.staging.barberapp.com` | `*.barberapp.com` |
+| App port | `127.0.0.1:3001` | `127.0.0.1:3000` |
+| Database port | `127.0.0.1:5433` | `127.0.0.1:5432` |
 | Database | `barberapp_staging` | `barberapp_production` |
 | Log level | `debug` | `info` |
 
-`config/deploy.staging.yml` is **deep-merged** on top of `config/deploy.yml` by Kamal. Only the values that differ (server IP, domain, DB name, log level) live in the staging file. Everything else (image name, registry, SSH user, volumes, aliases) is inherited from the base.
+`config/deploy.staging.yml` is **deep-merged** on top of `config/deploy.yml` by Kamal. Only the values that differ (port bindings, domain, DB name, log level) live in the staging file. Everything else (image name, registry, SSH user, volumes, aliases) is inherited from the base.
 
 ---
 
 ### Infrastructure Overview
 
+Both staging and production run on the **same single Hetzner VPS**. Port separation prevents conflicts:
+
 ```
 DNS (Hetzner / your registrar)
-  barberapp.com            → PROD_SERVER_IP
-  *.barberapp.com          → PROD_SERVER_IP
-  staging.barberapp.com    → STAGING_SERVER_IP
-  *.staging.barberapp.com  → STAGING_SERVER_IP
+  barberapp.com            → SERVER_IP
+  *.barberapp.com          → SERVER_IP
+  staging.barberapp.com    → SERVER_IP   (same server)
+  *.staging.barberapp.com  → SERVER_IP   (same server)
 
-Each Hetzner VPS (Ubuntu 22.04/24.04)
-  Nginx         — ports 80 and 443, wildcard SSL, reverse proxy
-  Docker        — runs containers managed by Kamal
-  PostgreSQL    — Kamal accessory container (127.0.0.1:5432)
-  App container — Puma + Thruster, bound to 127.0.0.1:3000
-  Solid Queue   — runs inside Puma (SOLID_QUEUE_IN_PUMA=true)
+Single Hetzner VPS (Ubuntu 22.04/24.04)
+  Nginx              — ports 80 and 443, wildcard SSL, reverse proxy
+  Docker             — runs containers managed by Kamal
+
+  Production app     — Puma + Thruster → 127.0.0.1:3000
+  Production DB      — PostgreSQL      → 127.0.0.1:5432
+
+  Staging app        — Puma + Thruster → 127.0.0.1:3001
+  Staging DB         — PostgreSQL      → 127.0.0.1:5433
+
+  Solid Queue        — runs inside Puma in both environments
 ```
+
+Nginx routes traffic by subdomain:
+- `*.barberapp.com` → `localhost:3000` (production)
+- `*.staging.barberapp.com` → `localhost:3001` (staging)
 
 **Why Nginx instead of kamal-proxy?**
 Kamal's built-in proxy uses Let's Encrypt's HTTP-01 challenge, which can only issue single-hostname certificates. Wildcard certificates (`*.barberapp.com`) require a DNS-01 challenge. Nginx + Certbot (with the Hetzner DNS plugin) handles this correctly.
 
 ---
 
-### 1. Provision Two Servers
+### 1. Provision a Server
 
 In the [Hetzner Cloud console](https://console.hetzner.cloud):
 
 1. Create a project (e.g. `barberapp`)
-2. **Staging server** — Ubuntu 22.04, type **CX11** (2 vCPU / 2 GB RAM) is enough
-3. **Production server** — Ubuntu 22.04, type **CX21** (2 vCPU / 4 GB RAM) or larger
-4. Add your SSH public key to both servers during creation
-5. Note both public IPv4 addresses
+2. Create one server — Ubuntu 22.04, type **CX21** (2 vCPU / 4 GB RAM) or larger
+   - CX21 comfortably runs both the production and staging app containers plus two PostgreSQL containers
+3. Add your SSH public key during creation
+4. Note the public IPv4 address (referred to as `SERVER_IP` throughout these instructions)
 
 ---
 
 ### 2. Configure DNS
 
-In your domain registrar (or Hetzner DNS console), add these A records:
+In your domain registrar (or Hetzner DNS console), add these A records — all pointing to the **same** `SERVER_IP`:
 
 | Type | Name | Value | TTL |
 |---|---|---|---|
-| A | `@` | `PROD_SERVER_IP` | 300 |
-| A | `*` | `PROD_SERVER_IP` | 300 |
-| A | `staging` | `STAGING_SERVER_IP` | 300 |
-| A | `*.staging` | `STAGING_SERVER_IP` | 300 |
+| A | `@` | `SERVER_IP` | 300 |
+| A | `*` | `SERVER_IP` | 300 |
+| A | `staging` | `SERVER_IP` | 300 |
+| A | `*.staging` | `SERVER_IP` | 300 |
 
 Wait for propagation before running Certbot (5–10 minutes for Hetzner DNS):
 
 ```bash
-dig barberapp.com +short                # → PROD_SERVER_IP
-dig demo.barberapp.com +short           # → PROD_SERVER_IP
-dig staging.barberapp.com +short        # → STAGING_SERVER_IP
-dig demo.staging.barberapp.com +short   # → STAGING_SERVER_IP
+dig barberapp.com +short                # → SERVER_IP
+dig demo.barberapp.com +short           # → SERVER_IP
+dig staging.barberapp.com +short        # → SERVER_IP
+dig demo.staging.barberapp.com +short   # → SERVER_IP
 ```
 
 ---
 
 ### 3. Run the Server Setup Script
 
-Run `script/server_setup.sh` **on each server separately**. The script:
+Run `script/server_setup.sh` **once on your single server**. The script:
 
 - Creates a `deploy` user (Kamal SSHes in as this user)
 - Installs Docker CE
 - Installs Nginx
 - Installs Certbot with the Hetzner DNS plugin
-- Obtains a wildcard Let's Encrypt certificate
-- Installs the correct Nginx site config
+- Obtains **both** wildcard Let's Encrypt certificates (`*.barberapp.com` and `*.staging.barberapp.com`)
+- Installs the Nginx site config (which proxies production on port 3000 and staging on port 3001)
 - Schedules automatic cert renewal (twice daily via cron)
 
-**Before running**, edit `script/server_setup.sh` and set the two variables at the top:
+**Before running**, edit `script/server_setup.sh` and set the variable at the top:
 
 ```bash
-DOMAIN="barberapp.com"   # or "staging.barberapp.com" for the staging run
 HETZNER_API_TOKEN=""     # create at console.hetzner.cloud → Security → API Tokens
 ```
 
-**Set up the staging server** (use `DOMAIN=staging.barberapp.com` and the staging Nginx config):
+**Copy and run the script:**
 
 ```bash
-scp script/server_setup.sh root@STAGING_SERVER_IP:/root/
-scp config/nginx/barberapp-staging.conf root@STAGING_SERVER_IP:/root/barberapp.conf
+scp script/server_setup.sh root@SERVER_IP:/root/
+scp config/nginx/barberapp.conf root@SERVER_IP:/root/barberapp.conf
 
-# Edit DOMAIN and HETZNER_API_TOKEN inside the script first, then:
-ssh root@STAGING_SERVER_IP "bash /root/server_setup.sh"
+# Edit HETZNER_API_TOKEN inside the script first, then:
+ssh root@SERVER_IP "bash /root/server_setup.sh"
 ```
 
-**Set up the production server** (use `DOMAIN=barberapp.com` and the production Nginx config):
+The Nginx config proxies both environments from the same server:
+- `*.barberapp.com` → `localhost:3000` (production)
+- `*.staging.barberapp.com` → `localhost:3001` (staging)
 
-```bash
-scp script/server_setup.sh root@PROD_SERVER_IP:/root/
-scp config/nginx/barberapp.conf root@PROD_SERVER_IP:/root/barberapp.conf
-
-# Edit DOMAIN and HETZNER_API_TOKEN inside the script first, then:
-ssh root@PROD_SERVER_IP "bash /root/server_setup.sh"
-```
-
-Verify Nginx is serving HTTPS on both servers after setup:
+Verify Nginx is serving HTTPS after setup:
 
 ```bash
 curl -I https://staging.barberapp.com   # HTTP/2 200 (or 502 until app is deployed)
@@ -501,28 +507,32 @@ image: YOUR_DOCKERHUB_USERNAME/barberapp   # ← your Docker Hub username
 servers:
   web:
     hosts:
-      - PROD_SERVER_IP                     # ← production server IPv4
+      - SERVER_IP                          # ← your Hetzner VPS IPv4
 accessories:
   db:
-    host: PROD_SERVER_IP                   # ← same IP
+    host: SERVER_IP                        # ← same IP
 env:
   clear:
     APP_HOST: barberapp.com                # ← your production domain
 ```
 
-Open `config/deploy.staging.yml` and replace the placeholders:
+Open `config/deploy.staging.yml` and replace the placeholder:
 
 ```yaml
 servers:
   web:
     hosts:
-      - STAGING_SERVER_IP                  # ← staging server IPv4
+      - SERVER_IP                          # ← same Hetzner VPS as production
+    options:
+      publish:
+        - "127.0.0.1:3001:80"             # staging app on port 3001 (prod uses 3000)
 accessories:
   db:
-    host: STAGING_SERVER_IP               # ← same IP
+    host: SERVER_IP                        # ← same server
+    port: "127.0.0.1:5433:5432"           # staging DB on port 5433 (prod uses 5432)
 env:
   clear:
-    APP_HOST: staging.barberapp.com       # ← your staging domain
+    APP_HOST: staging.barberapp.com        # ← your staging domain
 ```
 
 If you do not have a Docker Hub account, create a free one at [hub.docker.com](https://hub.docker.com) and create a repository named `barberapp`.
@@ -552,7 +562,7 @@ export SMTP_PASSWORD="your_smtp_password"
 ```bash
 export KAMAL_REGISTRY_PASSWORD="your_dockerhub_access_token"  # same registry
 export STAGING_POSTGRES_PASSWORD="strong_staging_password"
-export STAGING_DATABASE_URL="postgresql://barberapp:strong_staging_password@127.0.0.1:5432/barberapp_staging"
+export STAGING_DATABASE_URL="postgresql://barberapp:strong_staging_password@127.0.0.1:5433/barberapp_staging"
 # Twilio and SMTP can reuse production values or point to sandbox accounts
 export TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 export TWILIO_AUTH_TOKEN="your_auth_token"
@@ -591,11 +601,11 @@ kamal setup -d staging
 ```
 
 `kamal setup` will:
-1. SSH into the staging server as `deploy`
+1. SSH into the server as `deploy`
 2. Install Docker (if absent)
-3. Start kamal-proxy and the PostgreSQL accessory
+3. Start kamal-proxy and the staging PostgreSQL accessory (port 5433)
 4. Build and push the Docker image
-5. Pull and start the app container
+5. Pull and start the staging app container (port 3001)
 6. Run `bin/rails db:migrate`
 
 Verify staging is working:
@@ -605,7 +615,7 @@ kamal logs -d staging
 kamal app exec -d staging "bin/rails runner 'puts Salon.count'"
 ```
 
-Then stop kamal-proxy on the staging server (Nginx is the proxy):
+Then stop kamal-proxy for staging (Nginx is the proxy):
 
 ```bash
 kamal proxy stop -d staging
@@ -617,13 +627,15 @@ Visit `https://staging.barberapp.com` — you should see the BarberApp homepage.
 
 ### 7. First Deploy — Production
 
-Once staging is confirmed working, deploy to production:
+Once staging is confirmed working, deploy production to the same server:
 
 ```bash
 source ~/.barberapp_prod_secrets
 
 kamal setup
 ```
+
+This starts the production app on port 3000 and its PostgreSQL accessory on port 5432, alongside the already-running staging containers.
 
 Verify production:
 
@@ -632,7 +644,7 @@ kamal logs
 kamal app exec "bin/rails runner 'puts Salon.count'"
 ```
 
-Stop kamal-proxy on the production server:
+Stop kamal-proxy for production:
 
 ```bash
 kamal proxy stop
@@ -640,13 +652,13 @@ kamal proxy stop
 
 Visit `https://barberapp.com`.
 
-> **Note:** Every time you run `kamal setup` on a fresh server it restarts kamal-proxy. Run `kamal proxy stop` (or `kamal proxy stop -d staging`) again afterwards. Routine `kamal deploy` updates do not restart kamal-proxy.
+> **Note:** Every time you run `kamal setup` it (re)starts kamal-proxy. Run `kamal proxy stop` (or `kamal proxy stop -d staging`) afterwards. Routine `kamal deploy` updates do not restart kamal-proxy.
 
 ---
 
-### 8. Stop kamal-proxy on Both Servers
+### 8. Stop kamal-proxy
 
-After any fresh `kamal setup`, stop kamal-proxy before Nginx can take over:
+After any fresh `kamal setup`, stop kamal-proxy before Nginx can take over. Since both environments run on the same server, run this for each:
 
 ```bash
 kamal proxy stop             # production
@@ -707,13 +719,11 @@ kamal app restart -d staging
 kamal app details
 kamal app details -d staging
 
-# Nginx access logs on the server
-ssh deploy@PROD_SERVER_IP    "sudo tail -f /var/log/nginx/access.log"
-ssh deploy@STAGING_SERVER_IP "sudo tail -f /var/log/nginx/access.log"
+# Nginx access logs on the server (both environments share the same server)
+ssh deploy@SERVER_IP "sudo tail -f /var/log/nginx/access.log"
 
-# Renew SSL certificate manually (auto-renewal runs via cron)
-ssh deploy@PROD_SERVER_IP    "sudo certbot renew && sudo systemctl reload nginx"
-ssh deploy@STAGING_SERVER_IP "sudo certbot renew && sudo systemctl reload nginx"
+# Renew SSL certificates manually (auto-renewal runs via cron)
+ssh deploy@SERVER_IP "sudo certbot renew && sudo systemctl reload nginx"
 ```
 
 ---
@@ -728,10 +738,8 @@ In the Hetzner Cloud console → Object Storage → Create bucket (e.g. `barbera
 
 #### Install and configure s3cmd on the server
 
-Run this on each server you want to back up:
-
 ```bash
-ssh deploy@YOUR_SERVER_IP
+ssh deploy@SERVER_IP
 sudo apt install s3cmd -y
 s3cmd --configure   # enter your Hetzner Object Storage credentials when prompted
 ```
@@ -747,17 +755,22 @@ sudo nano /usr/local/bin/backup_db.sh
 set -e
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="/tmp/barberapp_${TIMESTAMP}.sql.gz"
+
+# ── Production database ────────────────────────────────────────────────────────
+PROD_FILE="/tmp/barberapp_prod_${TIMESTAMP}.sql.gz"
+docker exec barberapp-db pg_dump -U barberapp barberapp_production | gzip > "$PROD_FILE"
+s3cmd put "$PROD_FILE" s3://barberapp-backups/db/
+rm "$PROD_FILE"
+
+# ── Staging database ───────────────────────────────────────────────────────────
+# The staging PostgreSQL container is named barberapp-db (staging destination)
+STAGING_FILE="/tmp/barberapp_staging_${TIMESTAMP}.sql.gz"
+docker exec barberapp-staging-db pg_dump -U barberapp barberapp_staging | gzip > "$STAGING_FILE"
+s3cmd put "$STAGING_FILE" s3://barberapp-backups/db/
+rm "$STAGING_FILE"
+
+# ── Active Storage volume (production) ────────────────────────────────────────
 STORAGE_FILE="/tmp/storage_${TIMESTAMP}.tar.gz"
-
-# Dump from the Kamal PostgreSQL accessory container
-docker exec barberapp-db pg_dump -U barberapp barberapp_production | gzip > "$BACKUP_FILE"
-
-# Upload database backup
-s3cmd put "$BACKUP_FILE" s3://barberapp-backups/db/
-rm "$BACKUP_FILE"
-
-# Backup Active Storage volume
 docker run --rm \
   -v barberapp_storage:/data \
   -v /tmp:/backup \
@@ -792,10 +805,14 @@ sudo crontab -e
 
 ```bash
 # Download the backup you want to restore
-s3cmd get s3://barberapp-backups/db/barberapp_20260412_020000.sql.gz /tmp/restore.sql.gz
+s3cmd get s3://barberapp-backups/db/barberapp_prod_20260412_020000.sql.gz /tmp/restore.sql.gz
 
-# Restore into the running PostgreSQL container
+# Restore into the production PostgreSQL container
 gunzip -c /tmp/restore.sql.gz | docker exec -i barberapp-db psql -U barberapp barberapp_production
+
+# To restore staging:
+s3cmd get s3://barberapp-backups/db/barberapp_staging_20260412_020000.sql.gz /tmp/restore.sql.gz
+gunzip -c /tmp/restore.sql.gz | docker exec -i barberapp-staging-db psql -U barberapp barberapp_staging
 ```
 
 #### Summary
