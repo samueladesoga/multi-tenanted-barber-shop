@@ -58,8 +58,7 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  # Replace barberapp.com with your actual domain.
-  config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "barberapp.com"), protocol: "https" }
+  config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "barberapp.club"), protocol: "https" }
 
   # SMTP credentials come from ENV (set in .kamal/secrets → deploy.yml env.secret).
   config.action_mailer.delivery_method = :smtp
@@ -83,10 +82,9 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Allow the root domain and all tenant subdomains.
-  # Replace barberapp.com with your actual domain.
   config.hosts = [
-    "barberapp.com",
-    /\A[a-z0-9\-]+\.barberapp\.com\z/
+    "barberapp.club",
+    /\A[a-z0-9\-]+\.barberapp\.club\z/
   ]
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end

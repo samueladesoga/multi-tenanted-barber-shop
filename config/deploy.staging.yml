@@ -19,7 +19,7 @@ servers:
 
 env:
   clear:
-    APP_HOST: staging.barberapp.com
+    APP_HOST: staging.barberapp.club
     RAILS_LOG_LEVEL: debug
     RAILS_ENV: production
 

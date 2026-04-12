@@ -43,7 +43,7 @@ env:
   clear:
     SOLID_QUEUE_IN_PUMA: true
     RAILS_LOG_LEVEL: info
-    APP_HOST: barberapp.com
+    APP_HOST: barberapp.club
 
 # SSH into the server as a non-root deploy user (created by server_setup.sh).
 ssh:

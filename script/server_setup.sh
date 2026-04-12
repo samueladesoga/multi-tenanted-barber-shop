@@ -8,24 +8,30 @@
 #   2. Installs Docker
 #   3. Installs Nginx
 #   4. Installs Certbot with the Hetzner DNS plugin
-#   5. Obtains a wildcard Let's Encrypt certificate (*.barberapp.com)
-#   6. Installs the Nginx site config from this repo
-#   7. Stops kamal-proxy (Nginx handles the proxy role)
+#   5. Obtains wildcard Let's Encrypt certificates:
+#        *.barberapp.club          (production)
+#        *.staging.barberapp.club  (staging)
+#   6. Installs both Nginx site configs from this repo
+#   7. Production app:  proxied from localhost:3000
+#      Staging app:     proxied from localhost:3001
 #
 # Usage:
-#   scp script/server_setup.sh root@YOUR_SERVER_IP:/root/
-#   scp config/nginx/barberapp.conf root@YOUR_SERVER_IP:/root/
-#   ssh root@YOUR_SERVER_IP "bash /root/server_setup.sh"
+#   scp script/server_setup.sh root@SERVER_IP:/root/
+#   scp config/nginx/barberapp.conf root@SERVER_IP:/root/
+#   scp config/nginx/barberapp-staging.conf root@SERVER_IP:/root/
+#   ssh root@SERVER_IP "bash /root/server_setup.sh"
 #
 # After this script:
-#   1. Export your secrets (see .kamal/secrets)
-#   2. Run: kamal setup    # first deploy
-#   3. Run: kamal proxy stop  # remove kamal-proxy (Nginx is in charge)
-#   4. Run: kamal deploy   # subsequent deploys
+#   1. Export your secrets (see .kamal/secrets and .kamal/secrets.staging)
+#   2. Run: kamal setup -d staging   # deploy staging
+#   3. Run: kamal proxy stop -d staging
+#   4. Run: kamal setup              # deploy production
+#   5. Run: kamal proxy stop
 # =============================================================================
 set -euo pipefail
 
-DOMAIN="barberapp.com"          # ← replace with your domain
+PROD_DOMAIN="barberapp.club"
+STAGING_DOMAIN="staging.barberapp.club"
 DEPLOY_USER="deploy"
 HETZNER_API_TOKEN=""            # ← set this before running
 
@@ -78,19 +84,33 @@ dns_hetzner_api_token = ${HETZNER_API_TOKEN}
 EOF
 chmod 600 /etc/letsencrypt/hetzner.ini
 
-echo "==> Obtaining wildcard Let's Encrypt certificate for *.${DOMAIN}"
+echo "==> Obtaining wildcard certificate for production (*.${PROD_DOMAIN})"
 certbot certonly \
   --dns-hetzner \
   --dns-hetzner-credentials /etc/letsencrypt/hetzner.ini \
   --non-interactive \
   --agree-tos \
-  --email "admin@${DOMAIN}" \
-  -d "${DOMAIN}" \
-  -d "*.${DOMAIN}"
+  --email "admin@${PROD_DOMAIN}" \
+  -d "${PROD_DOMAIN}" \
+  -d "*.${PROD_DOMAIN}"
 
-echo "==> Installing Nginx site config"
+echo "==> Obtaining wildcard certificate for staging (*.${STAGING_DOMAIN})"
+certbot certonly \
+  --dns-hetzner \
+  --dns-hetzner-credentials /etc/letsencrypt/hetzner.ini \
+  --non-interactive \
+  --agree-tos \
+  --email "admin@${PROD_DOMAIN}" \
+  -d "${STAGING_DOMAIN}" \
+  -d "*.${STAGING_DOMAIN}"
+
+echo "==> Installing Nginx site configs"
 cp /root/barberapp.conf /etc/nginx/sites-available/barberapp
 ln -sf /etc/nginx/sites-available/barberapp /etc/nginx/sites-enabled/barberapp
+
+cp /root/barberapp-staging.conf /etc/nginx/sites-available/barberapp-staging
+ln -sf /etc/nginx/sites-available/barberapp-staging /etc/nginx/sites-enabled/barberapp-staging
+
 rm -f /etc/nginx/sites-enabled/default
 
 # Create certbot webroot for HTTP-01 renewal fallback
@@ -106,7 +126,10 @@ echo ""
 echo "==> Server setup complete!"
 echo ""
 echo "Next steps:"
-echo "  1. Fill in your secrets (see .kamal/secrets)"
-echo "  2. From your dev machine: kamal setup"
-echo "  3. From your dev machine: kamal proxy stop"
-echo "  4. Verify: https://${DOMAIN} and https://demo.${DOMAIN}"
+echo "  1. Fill in your secrets (see .kamal/secrets and .kamal/secrets.staging)"
+echo "  2. From your dev machine: kamal setup -d staging"
+echo "  3. From your dev machine: kamal proxy stop -d staging"
+echo "  4. From your dev machine: kamal setup"
+echo "  5. From your dev machine: kamal proxy stop"
+echo "  6. Verify: https://${PROD_DOMAIN} and https://demo.${PROD_DOMAIN}"
+echo "             https://${STAGING_DOMAIN} and https://demo.${STAGING_DOMAIN}"

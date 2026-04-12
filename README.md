@@ -1,6 +1,6 @@
 # BarberApp
 
-A multi-tenant SaaS application for managing barber salons. Each salon gets its own subdomain (`salon.barberapp.com`) with isolated data, staff authentication, customer QR-code loyalty tracking, appointment booking, service management, expense logging, and profitability reports.
+A multi-tenant SaaS application for managing barber salons. Each salon gets its own subdomain (`salon.barberapp.club`) with isolated data, staff authentication, customer QR-code loyalty tracking, appointment booking, service management, expense logging, and profitability reports.
 
 ---
 
@@ -49,7 +49,7 @@ A multi-tenant SaaS application for managing barber salons. Each salon gets its 
                            │                                  │
 Internet ──HTTPS──►  Nginx (443/80)                          │
                      wildcard SSL cert                        │
-                     *.barberapp.com                          │
+                     *.barberapp.club                          │
                            │                                  │
                            ▼                                  │
                      localhost:3000                           │
@@ -65,7 +65,7 @@ Internet ──HTTPS──►  Nginx (443/80)                          │
                            └─────────────────────────────────┘
 ```
 
-**Multi-tenancy** is subdomain-based. The request host determines the current salon via `acts_as_tenant`. All database queries are automatically scoped to that salon. The root domain (`barberapp.com`) hosts the marketing page and salon registration form.
+**Multi-tenancy** is subdomain-based. The request host determines the current salon via `acts_as_tenant`. All database queries are automatically scoped to that salon. The root domain (`barberapp.club`) hosts the marketing page and salon registration form.
 
 ---
 
@@ -380,7 +380,7 @@ Both staging and production run on the **same single Hetzner VPS**. Kamal 2's **
 | Kamal command | `kamal ... -d staging` | `kamal ...` |
 | Config file | `config/deploy.yml` + `config/deploy.staging.yml` | `config/deploy.yml` |
 | Secrets file | `.kamal/secrets.staging` | `.kamal/secrets` |
-| Domain | `*.staging.barberapp.com` | `*.barberapp.com` |
+| Domain | `*.staging.barberapp.club` | `*.barberapp.club` |
 | App port | `127.0.0.1:3001` | `127.0.0.1:3000` |
 | Database port | `127.0.0.1:5433` | `127.0.0.1:5432` |
 | Database | `barberapp_staging` | `barberapp_production` |
@@ -396,10 +396,10 @@ Both staging and production run on the **same single Hetzner VPS**. Port separat
 
 ```
 DNS (Hetzner / your registrar)
-  barberapp.com            → SERVER_IP
-  *.barberapp.com          → SERVER_IP
-  staging.barberapp.com    → SERVER_IP   (same server)
-  *.staging.barberapp.com  → SERVER_IP   (same server)
+  barberapp.club            → SERVER_IP
+  *.barberapp.club          → SERVER_IP
+  staging.barberapp.club    → SERVER_IP   (same server)
+  *.staging.barberapp.club  → SERVER_IP   (same server)
 
 Single Hetzner VPS (Ubuntu 22.04/24.04)
   Nginx              — ports 80 and 443, wildcard SSL, reverse proxy
@@ -415,11 +415,11 @@ Single Hetzner VPS (Ubuntu 22.04/24.04)
 ```
 
 Nginx routes traffic by subdomain:
-- `*.barberapp.com` → `localhost:3000` (production)
-- `*.staging.barberapp.com` → `localhost:3001` (staging)
+- `*.barberapp.club` → `localhost:3000` (production)
+- `*.staging.barberapp.club` → `localhost:3001` (staging)
 
 **Why Nginx instead of kamal-proxy?**
-Kamal's built-in proxy uses Let's Encrypt's HTTP-01 challenge, which can only issue single-hostname certificates. Wildcard certificates (`*.barberapp.com`) require a DNS-01 challenge. Nginx + Certbot (with the Hetzner DNS plugin) handles this correctly.
+Kamal's built-in proxy uses Let's Encrypt's HTTP-01 challenge, which can only issue single-hostname certificates. Wildcard certificates (`*.barberapp.club`) require a DNS-01 challenge. Nginx + Certbot (with the Hetzner DNS plugin) handles this correctly.
 
 ---
 
@@ -449,10 +449,10 @@ In your domain registrar (or Hetzner DNS console), add these A records — all p
 Wait for propagation before running Certbot (5–10 minutes for Hetzner DNS):
 
 ```bash
-dig barberapp.com +short                # → SERVER_IP
-dig demo.barberapp.com +short           # → SERVER_IP
-dig staging.barberapp.com +short        # → SERVER_IP
-dig demo.staging.barberapp.com +short   # → SERVER_IP
+dig barberapp.club +short                # → SERVER_IP
+dig demo.barberapp.club +short           # → SERVER_IP
+dig staging.barberapp.club +short        # → SERVER_IP
+dig demo.staging.barberapp.club +short   # → SERVER_IP
 ```
 
 ---
@@ -465,7 +465,7 @@ Run `script/server_setup.sh` **once on your single server**. The script:
 - Installs Docker CE
 - Installs Nginx
 - Installs Certbot with the Hetzner DNS plugin
-- Obtains **both** wildcard Let's Encrypt certificates (`*.barberapp.com` and `*.staging.barberapp.com`)
+- Obtains **both** wildcard Let's Encrypt certificates (`*.barberapp.club` and `*.staging.barberapp.club`)
 - Installs the Nginx site config (which proxies production on port 3000 and staging on port 3001)
 - Schedules automatic cert renewal (twice daily via cron)
 
@@ -486,14 +486,14 @@ ssh root@SERVER_IP "bash /root/server_setup.sh"
 ```
 
 The Nginx config proxies both environments from the same server:
-- `*.barberapp.com` → `localhost:3000` (production)
-- `*.staging.barberapp.com` → `localhost:3001` (staging)
+- `*.barberapp.club` → `localhost:3000` (production)
+- `*.staging.barberapp.club` → `localhost:3001` (staging)
 
 Verify Nginx is serving HTTPS after setup:
 
 ```bash
-curl -I https://staging.barberapp.com   # HTTP/2 200 (or 502 until app is deployed)
-curl -I https://barberapp.com           # HTTP/2 200 (or 502 until app is deployed)
+curl -I https://staging.barberapp.club   # HTTP/2 200 (or 502 until app is deployed)
+curl -I https://barberapp.club           # HTTP/2 200 (or 502 until app is deployed)
 ```
 
 ---
@@ -513,7 +513,7 @@ accessories:
     host: SERVER_IP                        # ← same IP
 env:
   clear:
-    APP_HOST: barberapp.com                # ← your production domain
+    APP_HOST: barberapp.club                # ← your production domain
 ```
 
 Open `config/deploy.staging.yml` and replace the placeholder:
@@ -532,7 +532,7 @@ accessories:
     port: "127.0.0.1:5433:5432"           # staging DB on port 5433 (prod uses 5432)
 env:
   clear:
-    APP_HOST: staging.barberapp.com        # ← your staging domain
+    APP_HOST: staging.barberapp.club        # ← your staging domain
 ```
 
 If you do not have a Docker Hub account, create a free one at [hub.docker.com](https://hub.docker.com) and create a repository named `barberapp`.
@@ -621,7 +621,7 @@ Then stop kamal-proxy for staging (Nginx is the proxy):
 kamal proxy stop -d staging
 ```
 
-Visit `https://staging.barberapp.com` — you should see the BarberApp homepage.
+Visit `https://staging.barberapp.club` — you should see the BarberApp homepage.
 
 ---
 
@@ -650,7 +650,7 @@ Stop kamal-proxy for production:
 kamal proxy stop
 ```
 
-Visit `https://barberapp.com`.
+Visit `https://barberapp.club`.
 
 > **Note:** Every time you run `kamal setup` it (re)starts kamal-proxy. Run `kamal proxy stop` (or `kamal proxy stop -d staging`) afterwards. Routine `kamal deploy` updates do not restart kamal-proxy.
 
@@ -674,7 +674,7 @@ For ongoing code changes:
 ```bash
 # Deploy to staging first — validate — then promote to production
 kamal deploy -d staging
-# ... test on staging.barberapp.com ...
+# ... test on staging.barberapp.club ...
 kamal deploy
 
 # Roll back if needed
@@ -846,19 +846,19 @@ gunzip -c /tmp/restore.sql.gz | docker exec -i barberapp-staging-db psql -U barb
 
 | URL pattern | Description |
 |---|---|
-| `barberapp.com` | Marketing homepage |
-| `barberapp.com/register` | New salon registration |
-| `[subdomain].barberapp.com` | Salon dashboard (requires staff login) |
-| `[subdomain].barberapp.com/customers` | Customer list |
-| `[subdomain].barberapp.com/visits` | Visit history |
-| `[subdomain].barberapp.com/appointments` | Appointment list |
-| `[subdomain].barberapp.com/book` | Public customer self-booking (no login) |
-| `[subdomain].barberapp.com/scan/:qr_token` | QR code scan endpoint (no login) |
-| `[subdomain].barberapp.com/services` | Services catalogue |
-| `[subdomain].barberapp.com/expenses` | Expense log |
-| `[subdomain].barberapp.com/reports` | Monthly P&L report |
-| `[subdomain].barberapp.com/reports/services` | Service profitability |
-| `[subdomain].barberapp.com/reports/discounts` | Discount analysis |
-| `[subdomain].barberapp.com/working_hours` | Working hours (owner only) |
-| `[subdomain].barberapp.com/staffs` | Team management (owner only) |
-| `[subdomain].barberapp.com/settings` | Salon settings (owner only) |
+| `barberapp.club` | Marketing homepage |
+| `barberapp.club/register` | New salon registration |
+| `[subdomain].barberapp.club` | Salon dashboard (requires staff login) |
+| `[subdomain].barberapp.club/customers` | Customer list |
+| `[subdomain].barberapp.club/visits` | Visit history |
+| `[subdomain].barberapp.club/appointments` | Appointment list |
+| `[subdomain].barberapp.club/book` | Public customer self-booking (no login) |
+| `[subdomain].barberapp.club/scan/:qr_token` | QR code scan endpoint (no login) |
+| `[subdomain].barberapp.club/services` | Services catalogue |
+| `[subdomain].barberapp.club/expenses` | Expense log |
+| `[subdomain].barberapp.club/reports` | Monthly P&L report |
+| `[subdomain].barberapp.club/reports/services` | Service profitability |
+| `[subdomain].barberapp.club/reports/discounts` | Discount analysis |
+| `[subdomain].barberapp.club/working_hours` | Working hours (owner only) |
+| `[subdomain].barberapp.club/staffs` | Team management (owner only) |
+| `[subdomain].barberapp.club/settings` | Salon settings (owner only) |
