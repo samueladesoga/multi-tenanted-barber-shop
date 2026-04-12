@@ -28,6 +28,7 @@
                 <%= link_to "Reports", reports_path, class: nav_link_class("reports") %>
                 <% if Current.staff&.owner? %>
                   <%= link_to "Team", staffs_path, class: nav_link_class("staffs") %>
+                  <%= link_to "Hours", working_hours_path, class: nav_link_class("working_hours") %>
                   <%= link_to "Settings", edit_settings_path, class: nav_link_class("settings") %>
                 <% end %>
               </div>

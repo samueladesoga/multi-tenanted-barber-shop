@@ -13,7 +13,7 @@ class WorkingHoursController < ApplicationController
   end
 
   def update
-    if current_salon.update_working_hours(params[:working_hours])
+    if current_salon.update_working_hours(params.require(:working_hours).permit!.to_h)
       redirect_to working_hours_path, notice: "Working hours updated."
     else
       redirect_to working_hours_path, alert: "Could not save working hours. Please check your entries."

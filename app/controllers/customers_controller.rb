@@ -1,6 +1,6 @@
 class CustomersController < ApplicationController
   before_action :authenticate_staff!
-  before_action :set_customer, only: %i[ show edit update destroy qr_code ]
+  before_action :set_customer, only: %i[ show edit update destroy qr_code share_loyalty_card ]
 
   def index
     @customers = params[:q].present? ? Customer.search(params[:q]).order(:name) : Customer.order(:name)
@@ -49,6 +49,16 @@ class CustomersController < ApplicationController
 
   def qr_code
     # Rendered in view — no extra logic needed
+  end
+
+  def share_loyalty_card
+    if @customer.email.blank?
+      redirect_to qr_code_customer_path(@customer), alert: "This customer has no email address on file."
+      return
+    end
+
+    CustomerMailer.loyalty_card(@customer).deliver_later
+    redirect_to qr_code_customer_path(@customer), notice: "Loyalty card sent to #{@customer.email}."
   end
 
   private

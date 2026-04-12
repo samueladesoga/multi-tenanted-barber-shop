@@ -18,9 +18,13 @@ Rails.application.routes.draw do
 
     resources :customers do
       member do
-        get :qr_code
+        get  :qr_code
+        post :share_loyalty_card
       end
     end
+
+    # Public loyalty card — shareable link using qr_token, no auth required
+    get "loyalty/:qr_token", to: "loyalty_cards#show", as: :loyalty_card
 
     resources :services
 

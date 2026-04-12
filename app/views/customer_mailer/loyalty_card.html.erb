@@ -1,0 +1,25 @@
+<p>Hi <%= @customer.name %>,</p>
+
+<p>Here is your loyalty card for <strong><%= @salon.name %></strong>. Show this QR code at every visit to track your free cuts.</p>
+
+<p style="text-align:center; margin: 24px 0">
+  <%= @customer.qr_code_svg(@card_url).html_safe %>
+</p>
+
+<table style="border-spacing: 8px; margin-bottom: 16px">
+  <tr><td><strong>Visits so far:</strong></td><td><%= @customer.visits_count %></td></tr>
+  <tr><td><strong>Free cut every:</strong></td><td><%= @salon.loyalty_threshold %> visits</td></tr>
+  <tr><td><strong>Visits until next free cut:</strong></td><td><%= @customer.visits_until_free %></td></tr>
+</table>
+
+<p>
+  You can also view and save your card online:<br>
+  <a href="<%= @card_url %>"><%= @card_url %></a>
+</p>
+
+<p>
+  Ready to book your next appointment?<br>
+  <a href="<%= @booking_url %>">Book online</a>
+</p>
+
+<p>— The team at <%= @salon.name %></p>

@@ -1,0 +1,15 @@
+Hi <%= @customer.name %>,
+
+Here is your loyalty card for <%= @salon.name %>. Show this QR code at every visit to track your free cuts.
+
+Visits so far:          <%= @customer.visits_count %>
+Free cut every:         <%= @salon.loyalty_threshold %> visits
+Visits until free cut:  <%= @customer.visits_until_free %>
+
+View and save your card online:
+<%= @card_url %>
+
+Book your next appointment:
+<%= @booking_url %>
+
+— The team at <%= @salon.name %>

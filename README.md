@@ -16,6 +16,7 @@ A multi-tenant SaaS application for managing barber salons. Each salon gets its 
   - [Configure Local Subdomains](#configure-local-subdomains)
   - [Environment Variables](#environment-variables)
   - [Database Setup](#database-setup)
+  - [Seed Demo Data](#seed-demo-data)
   - [Run the App](#run-the-app)
   - [Register a Salon](#register-a-salon)
 - [Background Jobs](#background-jobs)
@@ -34,6 +35,7 @@ A multi-tenant SaaS application for managing barber salons. Each salon gets its 
   - [8. Stop kamal-proxy on Both Servers](#8-stop-kamal-proxy-on-both-servers)
   - [9. Subsequent Deploys](#9-subsequent-deploys)
   - [10. Useful Kamal Commands](#10-useful-kamal-commands)
+- [11. Backups](#11-backups)
 - [Database Schema](#database-schema)
 - [URL Structure](#url-structure)
 
@@ -246,7 +248,46 @@ bin/rails db:create db:migrate
 
 This creates `barberapp_development` and `barberapp_test` databases and runs all migrations.
 
-There are no seed files — salons register themselves through the UI.
+---
+
+### Seed Demo Data
+
+A demo salon is included for development, staging, and production demos. It creates a realistic Nigerian barbershop with staff, customers, visits, appointments, and expenses so you can explore every feature immediately.
+
+```bash
+bin/rails db:seed
+```
+
+**What gets created:**
+
+| Thing | Detail |
+|---|---|
+| Salon | **Chukwu's Cuts** — subdomain `demo`, NGN, 3 chairs, every 5th cut free |
+| Owner | `emeka@democuts.com` / `password123` |
+| Staff | Tunde Adeyemi, Chioma Eze — same password |
+| Services | 6 services from ₦1,000 (Hair Wash) to ₦6,000 (Locs Maintenance) |
+| Working hours | Mon–Sat open, Sunday closed |
+| Customers | 10 Lagos-based customers |
+| Visits | 34 visits spread across 2 months — loyalty milestones, discounts, multiple staff |
+| Appointments | 7 upcoming — mix of pending/confirmed, staff-booked and self-booked |
+| Expenses | 12 expenses across 2 months — rent, wages, supplies, equipment |
+
+The seed is **idempotent** — safe to run multiple times in any environment without duplicating data.
+
+**Visit the demo salon after seeding:**
+
+| URL | What you see |
+|---|---|
+| `http://demo.barberapp.localhost:3000` | Public salon home page |
+| `http://demo.barberapp.localhost:3000/book` | Public customer booking page |
+| `http://demo.barberapp.localhost:3000/dashboard` | Staff dashboard (login required) |
+
+**To run on staging or production:**
+
+```bash
+kamal app exec -d staging "bin/rails db:seed"
+kamal app exec "bin/rails db:seed"
+```
 
 ---
 
@@ -671,6 +712,98 @@ ssh deploy@STAGING_SERVER_IP "sudo tail -f /var/log/nginx/access.log"
 ssh deploy@PROD_SERVER_IP    "sudo certbot renew && sudo systemctl reload nginx"
 ssh deploy@STAGING_SERVER_IP "sudo certbot renew && sudo systemctl reload nginx"
 ```
+
+---
+
+### 11. Backups
+
+There are two things to back up: the **PostgreSQL database** and the **Active Storage uploaded files**. Both are backed up to Hetzner Object Storage (S3-compatible, ~€0.006/GB/month — effectively free at this scale).
+
+#### Create a Hetzner Object Storage bucket
+
+In the Hetzner Cloud console → Object Storage → Create bucket (e.g. `barberapp-backups`). Note the endpoint, access key, and secret key.
+
+#### Install and configure s3cmd on the server
+
+Run this on each server you want to back up:
+
+```bash
+ssh deploy@YOUR_SERVER_IP
+sudo apt install s3cmd -y
+s3cmd --configure   # enter your Hetzner Object Storage credentials when prompted
+```
+
+#### Create the backup script
+
+```bash
+sudo nano /usr/local/bin/backup_db.sh
+```
+
+```bash
+#!/bin/bash
+set -e
+
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_FILE="/tmp/barberapp_${TIMESTAMP}.sql.gz"
+STORAGE_FILE="/tmp/storage_${TIMESTAMP}.tar.gz"
+
+# Dump from the Kamal PostgreSQL accessory container
+docker exec barberapp-db pg_dump -U barberapp barberapp_production | gzip > "$BACKUP_FILE"
+
+# Upload database backup
+s3cmd put "$BACKUP_FILE" s3://barberapp-backups/db/
+rm "$BACKUP_FILE"
+
+# Backup Active Storage volume
+docker run --rm \
+  -v barberapp_storage:/data \
+  -v /tmp:/backup \
+  alpine tar czf /backup/storage_${TIMESTAMP}.tar.gz /data
+
+s3cmd put "$STORAGE_FILE" s3://barberapp-backups/storage/
+rm "$STORAGE_FILE"
+
+echo "Backup complete: ${TIMESTAMP}"
+```
+
+```bash
+sudo chmod +x /usr/local/bin/backup_db.sh
+```
+
+#### Schedule with cron
+
+```bash
+sudo crontab -e
+```
+
+```
+# Daily backup at 2am
+0 2 * * * /usr/local/bin/backup_db.sh >> /var/log/barberapp_backup.log 2>&1
+
+# Weekly cleanup — delete backups older than 30 days
+0 3 * * 0 s3cmd del --recursive s3://barberapp-backups/db/ --older-than=30
+0 3 * * 0 s3cmd del --recursive s3://barberapp-backups/storage/ --older-than=30
+```
+
+#### Restore from a backup
+
+```bash
+# Download the backup you want to restore
+s3cmd get s3://barberapp-backups/db/barberapp_20260412_020000.sql.gz /tmp/restore.sql.gz
+
+# Restore into the running PostgreSQL container
+gunzip -c /tmp/restore.sql.gz | docker exec -i barberapp-db psql -U barberapp barberapp_production
+```
+
+#### Summary
+
+| What | Method | Frequency | Retention |
+|---|---|---|---|
+| Database | `pg_dump` → gzip → Hetzner Object Storage | Daily at 2am | 30 days |
+| Active Storage files | Docker volume → tar → Hetzner Object Storage | Daily at 2am | 30 days |
+| VPS snapshot | Hetzner Cloud console → Snapshots | Before major deploys | Manual |
+
+> **Tip:** Take a manual VPS snapshot in the Hetzner Cloud console before running `kamal setup` for the first time and before any large database migration. A snapshot captures the full server state and can be restored in one click (~€0.01/GB/month).
 
 ---
 
