@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Installs git hooks from bin/hooks/ into .git/hooks/.
+# Run once after cloning: bin/setup-hooks
+
+set -e
+
+HOOKS_DIR="$(git rev-parse --show-toplevel)/bin/hooks"
+GIT_HOOKS_DIR="$(git rev-parse --show-toplevel)/.git/hooks"
+
+for hook in "$HOOKS_DIR"/*; do
+  name=$(basename "$hook")
+  target="$GIT_HOOKS_DIR/$name"
+  cp "$hook" "$target"
+  chmod +x "$target"
+  echo "Installed $name"
+done
+
+echo "Git hooks installed."

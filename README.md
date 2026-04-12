@@ -169,6 +169,9 @@ bundle install
 
 # Install Tailwind CSS binary
 bin/rails tailwindcss:install   # only needed on first setup
+
+# Install git hooks (RuboCop + Brakeman run on every commit)
+bin/setup-hooks
 ```
 
 ---
