@@ -14,6 +14,7 @@ class StaffsController < ApplicationController
   def create
     @staff = Staff.new(staff_params)
     @staff.salon = Current.salon
+    @staff.role  = params[:staff][:role].presence_in(Staff.roles.keys) || :staff
 
     if @staff.save
       redirect_to staffs_path, notice: "#{@staff.name} added to the team."
@@ -26,6 +27,7 @@ class StaffsController < ApplicationController
   end
 
   def update
+    @staff.role = params[:staff][:role].presence_in(Staff.roles.keys) if params[:staff][:role].present?
     if @staff.update(update_params)
       redirect_to staffs_path, notice: "#{@staff.name} updated."
     else
@@ -48,12 +50,11 @@ class StaffsController < ApplicationController
     end
 
     def staff_params
-      params.require(:staff).permit(:name, :email, :role, :password, :password_confirmation)
+      params.require(:staff).permit(:name, :email, :password, :password_confirmation)
     end
 
     def update_params
-      # Only include password if one was provided
-      permitted = params.require(:staff).permit(:name, :email, :role, :password, :password_confirmation)
+      permitted = params.require(:staff).permit(:name, :email, :password, :password_confirmation)
       permitted.reject { |k, v| k.to_s.include?("password") && v.blank? }
     end
 end

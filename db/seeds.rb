@@ -22,7 +22,6 @@ salon.update!(
 puts "  Salon: #{salon.name} (#{salon.subdomain})"
 
 ActsAsTenant.with_tenant(salon) do
-
   # ---------------------------------------------------------------------------
   # Staff
   # ---------------------------------------------------------------------------
@@ -81,7 +80,7 @@ ActsAsTenant.with_tenant(salon) do
     { name: "Haircut & Shave",     base_price: 4_000, duration_minutes: 45 },
     { name: "Hair Wash",           base_price: 1_000, duration_minutes: 15 },
     { name: "Locs Maintenance",    base_price: 6_000, duration_minutes: 60 },
-    { name: "Kids Haircut",        base_price: 2_000, duration_minutes: 20 },
+    { name: "Kids Haircut",        base_price: 2_000, duration_minutes: 20 }
   ]
 
   service_records = services_data.map do |attrs|
@@ -114,7 +113,7 @@ ActsAsTenant.with_tenant(salon) do
     { name: "Biodun Ojo",     phone_number: "+2348078901234", email: "biodun.ojo@gmail.com",     area: "Ajah",        state: "Lagos"  },
     { name: "Uche Nnadi",     phone_number: "+2348089012345", email: "uche.nnadi@gmail.com",     area: "Oshodi",      state: "Lagos"  },
     { name: "Lanre Fasanya",  phone_number: "+2348090123456", email: "",                          area: "Mushin",      state: "Lagos"  },
-    { name: "Dele Okonkwo",   phone_number: "+2348001234567", email: "dele.okonkwo@hotmail.com", area: "Festac",      state: "Lagos"  },
+    { name: "Dele Okonkwo",   phone_number: "+2348001234567", email: "dele.okonkwo@hotmail.com", area: "Festac",      state: "Lagos"  }
   ]
 
   customer_records = customers_data.map do |attrs|
@@ -181,7 +180,7 @@ ActsAsTenant.with_tenant(salon) do
       [ 8, 18, haircut,       tunde,  3_000 ],
 
       [ 9, 53, locs,          owner,  6_000 ],
-      [ 9, 26, locs,          owner,  5_500 ], # discount
+      [ 9, 26, locs,          owner,  5_500 ] # discount
     ]
 
     visit_scenarios.each do |cust_idx, days_ago, service, staff, price|
@@ -217,7 +216,7 @@ ActsAsTenant.with_tenant(salon) do
       { customer: customer_records[3], service: shave,         staff: chioma, at: tomorrow.to_time.change(hour: 14, min: 0),  status: :pending,    booked_by: :customer_self },
       { customer: customer_records[4], service: haircut,       staff: tunde,  at: day_after.to_time.change(hour: 9,  min: 30), status: :confirmed, booked_by: :staff_member  },
       { customer: customer_records[5], service: kids_haircut,  staff: tunde,  at: day_after.to_time.change(hour: 11, min: 0),  status: :pending,   booked_by: :customer_self },
-      { customer: customer_records[6], service: haircut_shave, staff: owner,  at: next_week.to_time.change(hour: 10, min: 0),  status: :pending,   booked_by: :customer_self },
+      { customer: customer_records[6], service: haircut_shave, staff: owner,  at: next_week.to_time.change(hour: 10, min: 0),  status: :pending,   booked_by: :customer_self }
     ]
 
     appt_scenarios.each do |attrs|
@@ -259,7 +258,7 @@ ActsAsTenant.with_tenant(salon) do
       { category: :wages,     amount:  80_000, incurred_on: last_month.beginning_of_month + 6.days, description: "Staff wages — Chioma" },
       { category: :supplies,  amount:  22_000, incurred_on: last_month.beginning_of_month + 2.days, description: "Clippers oil, disposables" },
       { category: :utilities, amount:  14_500, incurred_on: last_month.beginning_of_month + 5.days, description: "Electricity & water" },
-      { category: :equipment, amount:  45_000, incurred_on: last_month.beginning_of_month + 10.days, description: "New clippers set" },
+      { category: :equipment, amount:  45_000, incurred_on: last_month.beginning_of_month + 10.days, description: "New clippers set" }
     ]
 
     expense_data.each do |attrs|
@@ -277,7 +276,6 @@ ActsAsTenant.with_tenant(salon) do
   else
     puts "  Expenses: skipped (already exist)"
   end
-
 end
 
 puts ""

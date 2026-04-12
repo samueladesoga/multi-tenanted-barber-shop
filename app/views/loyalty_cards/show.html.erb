@@ -8,7 +8,7 @@
     </div>
 
     <div class="flex justify-center">
-      <%= @customer.qr_code_svg(scan_qr_url(@customer.qr_token)).html_safe %>
+      <%= qr_code_svg_tag(@customer, scan_qr_url(@customer.qr_token)) %>
     </div>
 
     <p class="text-xs text-gray-400 font-mono break-all"><%= @customer.qr_token %></p>
