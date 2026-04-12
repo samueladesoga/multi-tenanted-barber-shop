@@ -117,12 +117,6 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
-    faraday (2.14.1)
-      faraday-net_http (>= 2.0, < 3.5)
-      json
-      logger
-    faraday-net_http (3.4.2)
-      net-http (~> 0.5)
     ffi (1.17.4-aarch64-linux-gnu)
     ffi (1.17.4-aarch64-linux-musl)
     ffi (1.17.4-arm-linux-gnu)
@@ -156,8 +150,6 @@ GEM
       actionview (>= 7.0.0)
       activesupport (>= 7.0.0)
     json (2.19.3)
-    jwt (3.1.2)
-      base64
     kamal (2.11.0)
       activesupport (>= 7.0)
       base64 (~> 0.2)
@@ -195,8 +187,6 @@ GEM
       drb (~> 2.0)
       prism (~> 1.5)
     msgpack (1.8.0)
-    net-http (0.9.1)
-      uri (>= 0.11.1)
     net-imap (0.6.3)
       date
       net-protocol
@@ -386,10 +376,6 @@ GEM
     turbo-rails (2.0.23)
       actionpack (>= 7.1.0)
       railties (>= 7.1.0)
-    twilio-ruby (7.10.4)
-      faraday (>= 0.9, < 3.0)
-      jwt (>= 1.5, < 4.0)
-      nokogiri (>= 1.6, < 2.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (3.2.0)
@@ -447,7 +433,6 @@ DEPENDENCIES
   tailwindcss-rails
   thruster
   turbo-rails
-  twilio-ruby
   tzinfo-data
   web-console
 

@@ -21,7 +21,7 @@ A multi-tenant SaaS application for managing barber salons. Each salon gets its 
   - [Register a Salon](#register-a-salon)
 - [Background Jobs](#background-jobs)
 - [Email in Development](#email-in-development)
-- [SMS in Development](#sms-in-development)
+- [WhatsApp in Development](#whatsapp-in-development)
 - [Hetzner VPS Deployment](#hetzner-vps-deployment)
   - [Environment Strategy](#environment-strategy)
   - [Infrastructure Overview](#infrastructure-overview)
@@ -76,7 +76,7 @@ Internet ──HTTPS──►  Nginx (443/80)                          │
 - **Customer management** — name, phone, email, area, state; QR code generated per customer
 - **QR loyalty programme** — visits tracked by QR scan or phone/name lookup; free cut after N visits (configurable per salon)
 - **Appointment booking** — staff-side and public self-booking; slot engine respects working hours, chair count, and existing bookings; 30-minute slots by default
-- **SMS + email notifications** — on appointment booked, confirmed, and cancelled; day-before reminders via Solid Queue cron (Twilio + SMTP)
+- **WhatsApp + email notifications** — on appointment booked, confirmed, and cancelled; day-before reminders via Solid Queue cron (Meta WhatsApp Cloud API + SMTP)
 - **Services catalogue** — name, price, duration; mark active/inactive
 - **Price overrides** — staff can discount the base price at visit time with an optional reason
 - **Expense logging** — categorised expenses (rent, supplies, utilities, wages, marketing, equipment, other)
@@ -101,7 +101,7 @@ Internet ──HTTPS──►  Nginx (443/80)                          │
 | Background jobs | Solid Queue |
 | Charts | Chartkick + Chart.js (CDN) |
 | QR codes | rqrcode |
-| SMS | twilio-ruby |
+| WhatsApp | Meta WhatsApp Cloud API (built-in Net::HTTP) |
 | Email (dev) | letter_opener |
 | Deploy | Kamal 2 |
 | Web server | Puma + Thruster |
@@ -231,10 +231,10 @@ The app reads optional environment variables for SMS. Copy and customise the exa
 Create a `.env` file or add to your shell profile:
 
 ```bash
-# Twilio SMS (optional in development — SmsService logs to console if absent)
-export TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-export TWILIO_AUTH_TOKEN="your_auth_token"
-export TWILIO_FROM="+1234567890"
+# WhatsApp Cloud API (optional in development — SmsService logs to console if absent)
+# Get these from Meta Developer Console → your app → WhatsApp → API Setup
+export WHATSAPP_TOKEN="your_permanent_access_token"
+export WHATSAPP_PHONE_NUMBER_ID="your_phone_number_id"
 ```
 
 No `.env` gem is included. Either `source` the file before starting the server, or add the exports to your `~/.zshrc` / `~/.bashrc`.
@@ -359,13 +359,15 @@ The `letter_opener` gem is configured for development. All emails open in your d
 
 ---
 
-## SMS in Development
+## WhatsApp in Development
 
-`SmsService` checks for Twilio credentials at call time. If `TWILIO_ACCOUNT_SID` is blank, it logs the message to the Rails console instead of making an API call. You will see lines like:
+`SmsService` checks for Meta credentials at call time. If `WHATSAPP_TOKEN` is blank, it logs the message to the Rails console instead of sending. You will see lines like:
 
 ```
-[SmsService] SMS to +44... : "Your appointment tomorrow at 10:00am..."
+[WhatsApp] To: +2348012345678 | Body: Reminder: You have an appointment at Chukwu's Cuts tomorrow...
 ```
+
+To send real WhatsApp messages in development, set `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` in your shell.
 
 ---
 
@@ -549,9 +551,8 @@ All secrets are pulled from your **local shell** at deploy time. The `.kamal/sec
 export KAMAL_REGISTRY_PASSWORD="your_dockerhub_access_token"
 export POSTGRES_PASSWORD="strong_production_password"
 export DATABASE_URL="postgresql://barberapp:strong_production_password@127.0.0.1:5432/barberapp_production"
-export TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-export TWILIO_AUTH_TOKEN="your_auth_token"
-export TWILIO_FROM="+1234567890"
+export WHATSAPP_TOKEN="your_permanent_access_token"
+export WHATSAPP_PHONE_NUMBER_ID="your_phone_number_id"
 export SMTP_ADDRESS="smtp.postmarkapp.com"
 export SMTP_USERNAME="your_smtp_username"
 export SMTP_PASSWORD="your_smtp_password"
@@ -563,10 +564,9 @@ export SMTP_PASSWORD="your_smtp_password"
 export KAMAL_REGISTRY_PASSWORD="your_dockerhub_access_token"  # same registry
 export STAGING_POSTGRES_PASSWORD="strong_staging_password"
 export STAGING_DATABASE_URL="postgresql://barberapp:strong_staging_password@127.0.0.1:5433/barberapp_staging"
-# Twilio and SMTP can reuse production values or point to sandbox accounts
-export TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-export TWILIO_AUTH_TOKEN="your_auth_token"
-export TWILIO_FROM="+1234567890"
+# WhatsApp and SMTP can reuse the same production credentials
+export WHATSAPP_TOKEN="your_permanent_access_token"
+export WHATSAPP_PHONE_NUMBER_ID="your_phone_number_id"
 export SMTP_ADDRESS="smtp.postmarkapp.com"
 export SMTP_USERNAME="your_smtp_username"
 export SMTP_PASSWORD="your_smtp_password"

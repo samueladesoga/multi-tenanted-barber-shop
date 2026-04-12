@@ -28,9 +28,6 @@ gem "acts_as_tenant"
 # QR code generation
 gem "rqrcode"
 
-# SMS notifications
-gem "twilio-ruby"
-
 # Charts
 gem "chartkick"
 gem "groupdate"
