@@ -9,13 +9,13 @@
 service: barberapp
 
 # Docker Hub image — replace YOUR_DOCKERHUB_USERNAME with your actual username.
-image: YOUR_DOCKERHUB_USERNAME/barberapp
+image: samadesoga/barberapp
 
 # Deploy to your Hetzner VPS. Replace with your server's public IP.
 servers:
   web:
     hosts:
-      - YOUR_SERVER_IP
+      - 178.104.221.97
     # Publish the app on localhost:3000 only — Nginx fronts it with wildcard SSL.
     # After first deploy run: kamal proxy stop (Nginx handles the proxy role).
     options:
@@ -25,7 +25,7 @@ servers:
 # Docker Hub registry — set KAMAL_REGISTRY_PASSWORD in .kamal/secrets.
 registry:
   server: registry-1.docker.io
-  username: YOUR_DOCKERHUB_USERNAME
+  username: samadesoga
   password:
     - KAMAL_REGISTRY_PASSWORD
 
@@ -65,7 +65,7 @@ builder:
 accessories:
   db:
     image: postgres:16
-    host: YOUR_SERVER_IP
+    host: 178.104.221.97
     port: "127.0.0.1:5432:5432"
     env:
       secret:

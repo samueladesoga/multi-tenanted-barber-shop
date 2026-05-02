@@ -505,7 +505,7 @@ curl -I https://barberapp.club           # HTTP/2 200 (or 502 until app is deplo
 Open `config/deploy.yml` (production) and replace the placeholders:
 
 ```yaml
-image: YOUR_DOCKERHUB_USERNAME/barberapp   # ← your Docker Hub username
+image: samadesoga/barberapp   # ← your Docker Hub username
 servers:
   web:
     hosts:
