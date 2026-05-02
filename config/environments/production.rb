@@ -51,7 +51,6 @@ Rails.application.configure do
 
   # Use Solid Queue for background jobs
   config.active_job.queue_adapter = :solid_queue
-  config.after_initialize { SolidQueue.recurring_schedule_config_path = Rails.root.join("config/recurring.yml") }
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
