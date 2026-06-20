@@ -30,7 +30,7 @@ accessories:
     port: "127.0.0.1:5433:5432"
     env:
       secret:
-        - STAGING_POSTGRES_PASSWORD
+        - POSTGRES_PASSWORD
       clear:
         POSTGRES_USER: barberapp
         POSTGRES_DB: barberapp_staging
