@@ -33,10 +33,11 @@ set -euo pipefail
 PROD_DOMAIN="barberapp.club"
 STAGING_DOMAIN="staging.barberapp.club"
 DEPLOY_USER="deploy"
-HETZNER_API_TOKEN=""            # ← set this before running
+HETZNER_API_TOKEN="${HETZNER_API_TOKEN:-}"   # pass via env: HETZNER_API_TOKEN=xxx bash server_setup.sh
 
 if [[ -z "$HETZNER_API_TOKEN" ]]; then
-  echo "ERROR: Set HETZNER_API_TOKEN at the top of this script before running."
+  echo "ERROR: Set HETZNER_API_TOKEN in your environment before running."
+  echo "       HETZNER_API_TOKEN=xxx bash /root/server_setup.sh"
   exit 1
 fi
 
@@ -50,16 +51,17 @@ if ! id "$DEPLOY_USER" &>/dev/null; then
   chown -R "$DEPLOY_USER":"$DEPLOY_USER" /home/"$DEPLOY_USER"/.ssh
   chmod 700 /home/"$DEPLOY_USER"/.ssh
   chmod 600 /home/"$DEPLOY_USER"/.ssh/authorized_keys
-  # Passwordless sudo for docker (Kamal needs it)
-  echo "$DEPLOY_USER ALL=(ALL) NOPASSWD: /usr/bin/docker" >> /etc/sudoers.d/deploy
+  # Passwordless sudo — Kamal needs this for setup operations beyond just docker
+  echo "$DEPLOY_USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/deploy
 fi
 
 echo "==> Installing Docker"
 apt-get update -qq
 apt-get install -y -qq ca-certificates curl gnupg
 install -m 0755 -d /etc/apt/keyrings
+rm -f /etc/apt/keyrings/docker.gpg
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-  | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  | gpg --batch --dearmor -o /etc/apt/keyrings/docker.gpg
 chmod a+r /etc/apt/keyrings/docker.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
   https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
@@ -74,8 +76,8 @@ apt-get install -y -qq nginx
 systemctl enable nginx
 
 echo "==> Installing Certbot + Hetzner DNS plugin"
-apt-get install -y -qq python3-pip
-pip3 install certbot certbot-dns-hetzner --quiet
+apt-get install -y -qq python3-pip certbot
+pip3 install certbot-dns-hetzner --quiet --break-system-packages
 
 echo "==> Writing Hetzner DNS credentials for Certbot"
 mkdir -p /etc/letsencrypt
@@ -86,7 +88,7 @@ chmod 600 /etc/letsencrypt/hetzner.ini
 
 echo "==> Obtaining wildcard certificate for production (*.${PROD_DOMAIN})"
 certbot certonly \
-  --dns-hetzner \
+  --authenticator dns-hetzner \
   --dns-hetzner-credentials /etc/letsencrypt/hetzner.ini \
   --non-interactive \
   --agree-tos \
@@ -96,7 +98,7 @@ certbot certonly \
 
 echo "==> Obtaining wildcard certificate for staging (*.${STAGING_DOMAIN})"
 certbot certonly \
-  --dns-hetzner \
+  --authenticator dns-hetzner \
   --dns-hetzner-credentials /etc/letsencrypt/hetzner.ini \
   --non-interactive \
   --agree-tos \

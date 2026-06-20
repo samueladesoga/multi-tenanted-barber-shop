@@ -558,7 +558,7 @@ export SMTP_USERNAME="your_smtp_username"
 export SMTP_PASSWORD="your_smtp_password"
 ```
 
-**Staging secrets** — set before running `kamal deploy -d staging`:
+**Staging secrets** — set before running `/`:
 
 ```bash
 export KAMAL_REGISTRY_PASSWORD="your_dockerhub_access_token"  # same registry
