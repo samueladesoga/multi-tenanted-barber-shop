@@ -21,8 +21,6 @@ servers:
     options:
       publish:
         - "127.0.0.1:3000:80"
-    healthcheck:
-      timeout: 90
 
 # Docker Hub registry — set KAMAL_REGISTRY_PASSWORD in .kamal/secrets.
 registry:
@@ -56,6 +54,10 @@ volumes:
 
 # Bridge fingerprinted assets across deploys to avoid 404s mid-deploy.
 asset_path: /rails/public/assets
+
+# Give the app 90s to boot (Solid Queue starts inside Puma).
+healthcheck:
+  timeout: 90
 
 # Build for amd64 (Hetzner VPS architecture).
 # If you're on Apple Silicon (M1/M2/M3), cross-compile here.
