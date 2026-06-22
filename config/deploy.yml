@@ -55,9 +55,8 @@ volumes:
 # Bridge fingerprinted assets across deploys to avoid 404s mid-deploy.
 asset_path: /rails/public/assets
 
-# Give the app 90s to boot (Solid Queue starts inside Puma).
-healthcheck:
-  timeout: 90
+# Give the app 90s to become healthy (Solid Queue starts inside Puma).
+deploy_timeout: 90
 
 # Build for amd64 (Hetzner VPS architecture).
 # If you're on Apple Silicon (M1/M2/M3), cross-compile here.
