@@ -21,6 +21,8 @@ servers:
     options:
       publish:
         - "127.0.0.1:3000:80"
+    healthcheck:
+      timeout: 90
 
 # Docker Hub registry — set KAMAL_REGISTRY_PASSWORD in .kamal/secrets.
 registry:

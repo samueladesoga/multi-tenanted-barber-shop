@@ -16,6 +16,8 @@ servers:
     options:
       publish:
         - "127.0.0.1:3001:80"
+    healthcheck:
+      timeout: 90
 
 env:
   clear:
