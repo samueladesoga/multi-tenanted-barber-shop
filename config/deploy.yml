@@ -58,6 +58,14 @@ asset_path: /rails/public/assets
 # Give the app 90s to become healthy (Solid Queue starts inside Puma).
 deploy_timeout: 90
 
+# Run kamal-proxy on port 8080 so it doesn't conflict with Nginx on 80/443.
+# Nginx proxies directly to the app (localhost:3000/3001); kamal-proxy is used
+# only for health checks during deploys. Never run `kamal proxy stop`.
+proxy:
+  app_port: 80
+  run:
+    http_port: 8080
+
 # Build for amd64 (Hetzner VPS architecture).
 # If you're on Apple Silicon (M1/M2/M3), cross-compile here.
 builder:
