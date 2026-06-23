@@ -86,9 +86,12 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Allow the root domain and all tenant subdomains.
+  # APP_HOST is "barberapp.club" in production and "staging.barberapp.club" in staging,
+  # so this covers *.barberapp.club and *.staging.barberapp.club respectively.
+  _app_host = ENV.fetch("APP_HOST", "barberapp.club")
   config.hosts = [
-    "barberapp.club",
-    /\A[a-z0-9\-]+\.barberapp\.club\z/
+    _app_host,
+    /\A[a-z0-9\-]+\.#{Regexp.escape(_app_host)}\z/
   ]
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
