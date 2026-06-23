@@ -3,6 +3,10 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
+  # Subdomain TLD length — 1 for production (barberapp.club), 2 for staging
+  # (staging.barberapp.club acts as the root so demo.staging.barberapp.club is a tenant).
+  config.action_dispatch.tld_length = ENV.fetch("TLD_LENGTH", "1").to_i
+
   # Code is not reloaded between requests.
   config.enable_reloading = false
 

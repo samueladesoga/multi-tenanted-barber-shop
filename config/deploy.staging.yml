@@ -22,6 +22,7 @@ env:
     APP_HOST: staging.barberapp.club
     RAILS_LOG_LEVEL: debug
     RAILS_ENV: production
+    TLD_LENGTH: 2
 
 accessories:
   db:
