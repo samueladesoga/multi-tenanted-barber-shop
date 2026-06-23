@@ -65,6 +65,7 @@ proxy:
   app_port: 80
   run:
     http_port: 8080
+    https_port: 8443
 
 # Build for amd64 (Hetzner VPS architecture).
 # If you're on Apple Silicon (M1/M2/M3), cross-compile here.
